@@ -602,7 +602,7 @@ def write_entry(entry, fid, params):
     fid.write('\n')
 
 
-def write_entries_by_type(bib_entries, _verbose):
+def write_entries_by_type(bib_entries):
     '''write bib_entries by types (journal, conference, etc.)'''
 
     # create the html file with opted encoding
@@ -759,7 +759,7 @@ def write_entries_by_type(bib_entries, _verbose):
     print('Covert %s to %s' % (params['bibfile'], params['htmlfile_type']))
 
 
-def write_entries_by_year(bib_entries, _verbose):
+def write_entries_by_year(bib_entries):
     '''write bib_entries by types (journal, conference, etc.)'''
 
     year_entries_dict = {}
@@ -977,12 +977,12 @@ def main():
 
 
     if params['show_paper_style']=='type':
-        write_entries_by_type(bib_entries, _verbose);
+        write_entries_by_type(bib_entries);
     elif params['show_paper_style']=='year':
-        write_entries_by_year(bib_entries, _verbose);
+        write_entries_by_year(bib_entries);
     elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
-        write_entries_by_type(bib_entries, _verbose);
-        write_entries_by_year(bib_entries, _verbose);
+        write_entries_by_type(bib_entries);
+        write_entries_by_year(bib_entries);
 
 
 if __name__ == '__main__':
