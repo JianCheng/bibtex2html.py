@@ -538,7 +538,7 @@ def write_entry(entry, fid, params):
 
     bibid0 = entry['ID']
     bibid = bibid0.replace(':', u'-')
-    show_abstract = params['show_abstract'] and entry.has_key('abstract')
+    show_abstract = params['show_abstract'] and entry.has_key('abstract') and entry['abstract']!=''
     show_bibtex = params['show_bibtex']
 
     # bibtex
@@ -559,7 +559,7 @@ def write_entry(entry, fid, params):
 
     #  download fields
     for i_str in params['bibtex_fields_download']:
-        if entry.has_key(i_str):
+        if entry.has_key(i_str) and entry[i_str]!='':
             fid.write('\n')
             fid.write('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (params['target_link'], entry[i_str], i_str) )
 
@@ -570,7 +570,7 @@ def write_entry(entry, fid, params):
 
     #  note
     for i_str in params['bibtex_fields_note']:
-        if entry.has_key(i_str):
+        if entry.has_key(i_str) and entry[i_str]!='':
             fid.write('\n')
             fid.write('(<span class="%s">%s</span>)&nbsp;' % (i_str if i_str!='note' else 'hlnote0', entry[i_str]))
 
