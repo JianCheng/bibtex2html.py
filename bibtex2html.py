@@ -50,14 +50,29 @@ params['encoding'] = 'UTF-8'
 #  style of paper list ('type', 'year', 'type_year')
 params['show_paper_style'] = 'type'
 
-params['journal_shortname_highlighted'] = [u'TMI', u'HBM', u'MIA', u'MedIA', u'TIP', u'TPAMI', u'MRM']
+params['journal_shortname_highlighted'] = [u'TMI', u'HBM', u'MIA', u'MedIA', u'TIP', u'TPAMI', u'IJCV', u'MRM']
 params['journal_fullname_highlighted'] = [u'Nature Methods', u'NeuroImage', u'Medical Image Analysis', u'IEEE Transactions on Medical Imaging',
                                u'IEEE Transactions on Pattern Analysis and Machine Intelligence', u'Medical Physics', u'Magnetic Resonance in Medicine',
                                u'SIAM Journal on Imaging Sciences']
 params['conference_shortname_highlighted'] = [u'MICCAI', u'IPMI', u'CVPR', u'NIPS', u'ICCV', u'ECCV']
 params['author_names_highlighted'] = []
 
+# show the number of papers in specific journals and conferences
 params['show_count_number'] = True
+# counted publisher (conferences are determined by conference_shortname_highlighted)
+params['count_publisher'] = [
+    [u'Nature Methods'],
+    [u'TMI', u'IEEE Transactions on Medical Imaging'],
+    [u'MIA', u'MedIA', u'Medical Image Analysis'],
+    [u'TPAMI', u'IEEE Transactions on Pattern Analysis and Machine Intelligence'],
+    [u'IJCV', u'International Journal of Computer Vision'],
+    [u'NeuroImage'],
+    [u'HBM', u'Human Brain Mapping'],
+    [u'TIP', u'IEEE Transactions on Image Processing'],
+    [u'MRM', 'Magnetic Resonance in Medicine'],
+    [u'Medical Physics'],
+]
+
 params['show_citation_types'] = [u'article', u'inproceedings', u'phdthesis', u'inbook']
 
 params['show_citation'] = False
@@ -308,7 +323,12 @@ def get_publisher_shortname_from_entry(entry):
 def get_publisher_countnumber_from_entries(entries):
     '''Get count numbers from entries'''
 
-    count_name = params['journal_shortname_highlighted'] + params['journal_fullname_highlighted'] + params['conference_shortname_highlighted']
+    count_name = []
+    for name in params['count_publisher']:
+        if type(name)==list:
+            count_name.append(name[0])
+        else:
+            count_name.append(name)
     count_number = [0]*len(count_name)
 
     for e in entries:
@@ -845,7 +865,7 @@ def main():
                          'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted', \
                          'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', \
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding', \
-                         'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css']:
+                         'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css', 'count_publisher']:
             if config.has_option(param_str, name_str):
                 params[name_str] = ast.literal_eval(config.get(param_str,name_str))
 
@@ -883,6 +903,9 @@ def main():
         raise('wrong show_paper_style')
 
     params['bibfile'] = _bibfile
+
+    #  add conferences
+    params['count_publisher'] = params['count_publisher'] + params['conference_shortname_highlighted']
 
     if _verbose>=1:
         print('params = %s' % params )
