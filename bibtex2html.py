@@ -636,12 +636,12 @@ def write_entries_by_type(bib_entries):
 
     if params['show_count_number']:
         count_name, count_number = get_publisher_countnumber_from_entries(bib_entries)
-        f1.write('<p><big>&#8226;&nbsp;')
+        f1.write('<p>&#8226;&nbsp;')
         for i in xrange(len(count_name)):
             if count_number[i]>0:
-                str_count = '''<span style="font-size: 20px;"><b>%s</b> (%s)</span> &#8226;&nbsp;''' % (count_name[i], count_number[i])
+                str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (count_name[i], count_number[i])
                 f1.write(str_count)
-        f1.write('</big></p>\n\n')
+        f1.write('</p>\n\n')
 
     # lists according to publication type
     preprintlist = []
@@ -802,12 +802,12 @@ def write_entries_by_year(bib_entries):
 
     if params['show_count_number']:
         count_name, count_number = get_publisher_countnumber_from_entries(bib_entries)
-        f1.write('<p><big>&#8226;&nbsp;')
+        f1.write('<p>&#8226;&nbsp;')
         for i in xrange(len(count_name)):
             if count_number[i]>0:
-                str_count = '''<span style="font-size: 20px;"><b>%s</b> (%s)</span> &#8226;&nbsp;''' % (count_name[i], count_number[i])
+                str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (count_name[i], count_number[i])
                 f1.write(str_count)
-        f1.write('</big></p>\n\n')
+        f1.write('</p>\n\n')
 
     if len(year_entries_dict):
         years = sorted(year_entries_dict.keys(), reverse=True)
