@@ -44,7 +44,7 @@ import ast
 
 params = {}
 params['title'] = u'Publication List'
-params['css_file'] = 'style.css'
+params['css_file'] = ''
 params['encoding'] = 'UTF-8'
 
 #  style of paper list ('type', 'year', 'type_year')
