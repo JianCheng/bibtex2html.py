@@ -57,6 +57,7 @@ params['journal_fullname_highlighted'] = [u'Nature Methods', u'NeuroImage', u'Me
 params['conference_shortname_highlighted'] = [u'MICCAI', u'IPMI', u'CVPR', u'NIPS', u'ICCV', u'ECCV']
 params['author_names_highlighted'] = []
 
+params['show_count_number'] = True
 params['show_citation_types'] = [u'article', u'inproceedings', u'phdthesis', u'inbook']
 
 params['show_citation'] = False
@@ -146,7 +147,7 @@ def cmp_by_type(y, x):
         for word in params['journal_shortname_highlighted']:
             if x['journal'].find('(%s)' % word)>=0: x_hl=True
             if y['journal'].find('(%s)' % word)>=0: y_hl=True
-        for word in params['journal_fullname_highlighted']:
+        for word in params['journal_fullname_highlighted_insensitive']:
             if not x_hl and x['journal'].find(word)>=0: x_hl=True
             if not y_hl and y['journal'].find(word)>=0: y_hl=True
         if x_hl and not y_hl:  return 1
@@ -183,7 +184,7 @@ def highlight_publisher(publisher, params):
     words_highlighted = params['journal_shortname_highlighted'] + params['conference_shortname_highlighted']
 
     words = publisher.split(' ')
-    if len(words)==1 or publisher.lower() in params['journal_fullname_highlighted']:
+    if len(words)==1 or publisher.lower() in params['journal_fullname_highlighted_insensitive']:
         return '<b>%s</b>' % publisher
     else:
         dem_1 = publisher.find('(')
@@ -251,7 +252,7 @@ def get_wwwlink_from_entry(entry):
         return ''
 
 
-def get_bibtex_from_entry(entry, params):
+def get_bibtex_from_entry(entry):
     '''Get bibtex string from an entry. Remove some non-standard fields.'''
 
     entry2 = entry.copy()
@@ -283,6 +284,40 @@ def get_bibtex_from_entry(entry, params):
         print('bibstr=%s' % bibstr)
 
     return bibstr
+
+
+def get_publisher_shortname_from_entry(entry):
+    '''Get shortname for journals or conferences from an entry'''
+
+    pub = ''
+    if entry.has_key('journal'):
+        pub = entry['journal']
+    elif entry.has_key('booktitle'):
+        pub = entry['booktitle']
+
+    dem_1 = pub.find('(')
+    if dem_1>=0:
+        dem_2 = pub.find(')')
+        dem_3 = pub.find("'")
+        dem = dem_2 if dem_3<0 else dem_3
+        return pub[dem_1+1:dem]
+
+    return pub
+
+
+def get_publisher_countnumber_from_entries(entries):
+    '''Get count numbers from entries'''
+
+    count_name = params['journal_shortname_highlighted'] + params['journal_fullname_highlighted'] + params['conference_shortname_highlighted']
+    count_number = [0]*len(count_name)
+
+    for e in entries:
+        name = get_publisher_shortname_from_entry(e)
+        for i in xrange(len(count_name)):
+            if name.lower()==count_name[i].lower():
+                count_number[i] = count_number[i]+1
+
+    return count_name, count_number
 
 
 def get_anchor_name(name):
@@ -545,7 +580,7 @@ def write_entry(entry, fid, params):
 
     if show_bibtex:
         fid.write('\n')
-        bibstr = get_bibtex_from_entry(entry, params)
+        bibstr = get_bibtex_from_entry(entry)
         if params['use_bootstrap_dialog']:
             fid.write('''<div class="modal fade" id="bib-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Bibtex</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (bibid, bibstr))
         else:
@@ -578,6 +613,15 @@ def write_entries_by_type(bib_entries, _verbose):
 
     if params['show_page_title']:
         f1.write('<h1>%s</h1>\n\n' % params['title']);
+
+    if params['show_count_number']:
+        count_name, count_number = get_publisher_countnumber_from_entries(bib_entries)
+        f1.write('<p><big>&#8226;&nbsp;')
+        for i in xrange(len(count_name)):
+            if count_number[i]>0:
+                str_count = '''<span style="font-size: 20px;"><b>%s</b> (%s)</span> &#8226;&nbsp;''' % (count_name[i], count_number[i])
+                f1.write(str_count)
+        f1.write('</big></p>\n\n')
 
     # lists according to publication type
     preprintlist = []
@@ -736,6 +780,15 @@ def write_entries_by_year(bib_entries, _verbose):
     if params['show_page_title']:
         f1.write('<h1>%s</h1>\n\n' % params['title']);
 
+    if params['show_count_number']:
+        count_name, count_number = get_publisher_countnumber_from_entries(bib_entries)
+        f1.write('<p><big>&#8226;&nbsp;')
+        for i in xrange(len(count_name)):
+            if count_number[i]>0:
+                str_count = '''<span style="font-size: 20px;"><b>%s</b> (%s)</span> &#8226;&nbsp;''' % (count_name[i], count_number[i])
+                f1.write(str_count)
+        f1.write('</big></p>\n\n')
+
     if len(year_entries_dict):
         years = sorted(year_entries_dict.keys(), reverse=True)
 
@@ -797,7 +850,7 @@ def main():
                 params[name_str] = ast.literal_eval(config.get(param_str,name_str))
 
         #  booleans
-        for name_str in ['show_citation', 'use_icon', 'single_line', 'use_bootstrap_dialog', 'add_blank_line_after_item', 'show_page_title']:
+        for name_str in ['show_citation', 'use_icon', 'single_line', 'use_bootstrap_dialog', 'add_blank_line_after_item', 'show_page_title', 'show_count_number']:
             if config.has_option(param_str, name_str):
                 params[name_str] = config.getboolean(param_str, name_str)
 
@@ -812,7 +865,7 @@ def main():
             params[k] = v
 
     # use lower words in some keys
-    params['journal_fullname_highlighted'] = [name.lower() for name in params['journal_fullname_highlighted'] ]
+    #  params['journal_fullname_highlighted'] = [name.lower() for name in params['journal_fullname_highlighted'] ]
     params['show_paper_style'] = params['show_paper_style'].lower()
 
     # use different output html file for different types
@@ -835,6 +888,7 @@ def main():
         print('params = %s' % params )
 
 
+    params['journal_fullname_highlighted_insensitive'] = [name.lower() for name in params['journal_fullname_highlighted'] ]
     current_year = datetime.date.today().year
     params['show_citation_year'] = current_year - params['show_citation_before_years']
 
