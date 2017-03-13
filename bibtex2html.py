@@ -20,6 +20,7 @@ Examples:
 bibtex2html.py papers.bib papers.html -c papers_conf.ini
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'css_file': 'style.css'}"
+bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'selection_and': {'author': ['Jian Cheng'], 'year':[2010,2013] }}"
 
 Author(s): Jian Cheng (jian.cheng.1983@gmail.com)
 """
@@ -56,6 +57,10 @@ params['journal_fullname_highlighted'] = [u'Nature Methods', u'NeuroImage', u'Me
                                u'SIAM Journal on Imaging Sciences']
 params['conference_shortname_highlighted'] = [u'MICCAI', u'IPMI', u'CVPR', u'NIPS', u'ICCV', u'ECCV']
 params['author_names_highlighted'] = []
+
+# used for selection, select entries from bib file
+params['selection_and'] = {}
+params['selection_or'] = {}
 
 # show the number of papers in specific journals and conferences
 params['show_count_number'] = True
@@ -340,6 +345,63 @@ def get_publisher_countnumber_from_entries(entries):
     return count_name, count_number
 
 
+def is_entry_selected_by_key(entry, k, v):
+    '''return true if entry is selected'''
+
+    if k == 'year':
+        return int(entry[k]) in v
+    elif k in 'author':
+        author_names = entry[k].split(', ')
+        for name in v:
+            if name in author_names:
+                return True
+        return False
+    elif k=='author_first':
+        author_names = entry['author'].split(', ')
+        if author_names[0] in v:
+            return True
+        elif entry.has_key(k):
+            authorFirst_names = entry[k].split(', ')
+            for name in authorFirst_names:
+                if name in v:
+                    return True
+        return False
+    elif k =='author_corresponding':
+        if not entry.has_key(k):
+            return False
+        else:
+            authorCorr_names = entry[k].split(', ')
+            for name in authorCorr_names:
+                if name in v:
+                    return True
+    else:
+        raise('Wrong selection keys!')
+
+    return True
+
+
+def is_entry_selected(entry):
+    '''return true if entry is selected'''
+
+    if len(params['selection_and'])==0 and len(params['selection_or'])==0:
+        return True
+    if len(params['selection_and'])>0 and len(params['selection_or'])>0:
+        raise('selection_and and selection_or cannot be used together')
+
+    if len(params['selection_and'])>0:
+        for k, v in params['selection_and'].items():
+            if not is_entry_selected_by_key(entry, k, v):
+                return False
+        return True
+    elif len(params['selection_or'])>0:
+        for k, v in params['selection_or'].items():
+            if is_entry_selected_by_key(entry, k, v):
+                return True
+        return False
+    else:
+        raise('Wrong logic here')
+
+
 def get_anchor_name(name):
     '''get anchor from a string'''
     if name.isdigit():
@@ -383,7 +445,7 @@ def clean_entry(entry):
                 v = v[:-1]
 
         # fix author
-        if k == 'author':
+        if k == 'author' or k == 'author_first' or k == 'author_corresponding':
 
             # split into list of authors
             authors = v.split(' and ')
@@ -865,7 +927,7 @@ def main():
                          'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted', \
                          'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', \
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding', \
-                         'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css', 'count_publisher']:
+                         'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css', 'count_publisher', 'selection_and', 'selection_or']:
             if config.has_option(param_str, name_str):
                 params[name_str] = ast.literal_eval(config.get(param_str,name_str))
 
@@ -979,6 +1041,8 @@ def main():
         </html>
         """
 
+    params['prelog'] = prelog
+    params['afterlog'] = afterlog
 
     with io.open(_bibfile, 'r', encoding='utf8') as bibtex_file:
         bibtex_str = bibtex_file.read()
@@ -988,6 +1052,7 @@ def main():
     bib_entries = bib_database.entries
 
 
+    entries_selected=[]
     for e in bib_entries:
         if _verbose>=2:
             print 'e before clean=', e
@@ -995,17 +1060,17 @@ def main():
         if _verbose>=2:
             print 'e after clean =', e
 
-    params['prelog'] = prelog
-    params['afterlog'] = afterlog
+        if is_entry_selected(e):
+            entries_selected.append(e)
 
 
     if params['show_paper_style']=='type':
-        write_entries_by_type(bib_entries);
+        write_entries_by_type(entries_selected);
     elif params['show_paper_style']=='year':
-        write_entries_by_year(bib_entries);
+        write_entries_by_year(entries_selected);
     elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
-        write_entries_by_type(bib_entries);
-        write_entries_by_year(bib_entries);
+        write_entries_by_type(entries_selected);
+        write_entries_by_year(entries_selected);
 
 
 if __name__ == '__main__':
