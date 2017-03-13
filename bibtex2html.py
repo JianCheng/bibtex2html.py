@@ -342,7 +342,14 @@ def get_publisher_countnumber_from_entries(entries):
             if name.lower()==count_name[i].lower():
                 count_number[i] = count_number[i]+1
 
-    return count_name, count_number
+    count_str_list=['<p>&#8226;&nbsp;']
+    for i in xrange(len(count_name)):
+        if count_number[i]>0:
+            str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (count_name[i], count_number[i])
+            count_str_list.append(str_count)
+    count_str_list.append('</p>')
+
+    return count_name, count_number, ''.join(count_str_list)
 
 
 def is_entry_selected_by_key(entry, k, v):
@@ -697,13 +704,8 @@ def write_entries_by_type(bib_entries):
         f1.write('<h1>%s</h1>\n\n' % params['title']);
 
     if params['show_count_number']:
-        count_name, count_number = get_publisher_countnumber_from_entries(bib_entries)
-        f1.write('<p>&#8226;&nbsp;')
-        for i in xrange(len(count_name)):
-            if count_number[i]>0:
-                str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (count_name[i], count_number[i])
-                f1.write(str_count)
-        f1.write('</p>\n\n')
+        _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
+        f1.write('%s\n\n' % count_str)
 
     # lists according to publication type
     preprintlist = []
@@ -863,13 +865,8 @@ def write_entries_by_year(bib_entries):
         f1.write('<h1>%s</h1>\n\n' % params['title']);
 
     if params['show_count_number']:
-        count_name, count_number = get_publisher_countnumber_from_entries(bib_entries)
-        f1.write('<p>&#8226;&nbsp;')
-        for i in xrange(len(count_name)):
-            if count_number[i]>0:
-                str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (count_name[i], count_number[i])
-                f1.write(str_count)
-        f1.write('</p>\n\n')
+        _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
+        f1.write('%s\n\n' % count_str)
 
     if len(year_entries_dict):
         years = sorted(year_entries_dict.keys(), reverse=True)
