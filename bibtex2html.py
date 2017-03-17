@@ -338,14 +338,14 @@ def get_publisher_countnumber_from_entries(entries):
 
     for e in entries:
         name = get_publisher_shortname_from_entry(e)
-        for i in xrange(len(count_name)):
-            if name.lower()==count_name[i].lower():
-                count_number[i] = count_number[i]+1
+        for i, name1 in enumerate(count_name):
+            if name.lower()==name1.lower():
+                count_number[i] += 1
 
     count_str_list=['<p>&#8226;&nbsp;']
-    for i in xrange(len(count_name)):
+    for i, name in enumerate(count_name):
         if count_number[i]>0:
-            str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (count_name[i], count_number[i])
+            str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, count_number[i])
             count_str_list.append(str_count)
     count_str_list.append('</p>')
 
@@ -390,17 +390,17 @@ def is_entry_selected_by_key(entry, k, v):
 def is_entry_selected(entry):
     '''return true if entry is selected'''
 
-    if len(params['selection_and'])==0 and len(params['selection_or'])==0:
+    if not params['selection_and'] and not params['selection_or']:
         return True
-    if len(params['selection_and'])>0 and len(params['selection_or'])>0:
+    if params['selection_and'] and params['selection_or']:
         raise('selection_and and selection_or cannot be used together')
 
-    if len(params['selection_and'])>0:
+    if params['selection_and']:
         for k, v in params['selection_and'].items():
             if not is_entry_selected_by_key(entry, k, v):
                 return False
         return True
-    elif len(params['selection_or'])>0:
+    elif params['selection_or']:
         for k, v in params['selection_or'].items():
             if is_entry_selected_by_key(entry, k, v):
                 return True
@@ -742,15 +742,15 @@ def write_entries_by_type(bib_entries):
     # write list of sections
     str_year       = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by year</b></a></span> &#8226;&nbsp;''' % os.path.basename(params['htmlfile_year']) if params['htmlfile_year'] else ''
 
-    str_preprint   = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Preprints'), 'Preprints') if len(preprintlist) else ''
-    str_book       = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Books'), 'Books') if len(booklist) else ''
-    str_chapter    = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Book Chapters'), 'Book Chapters') if len(bookchapterlist) else ''
-    str_journal    = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Journal Articles'), 'Journals') if len(journallist) else ''
-    str_conference = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Conference Articles'), 'Conferences') if len(conflist) else ''
-    str_abstract   = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Conference Abstracts'), 'Abstracts') if len(abstractlist) else ''
-    str_report     = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Research Reports'), 'Research Reports') if len(techreportlist) else ''
-    str_thesis     = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Theses'), 'Theses') if len(thesislist) else ''
-    str_misc       = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Miscellaneous Papers'), 'Miscellaneous Papers') if len(misclist) else ''
+    str_preprint   = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Preprints'), 'Preprints') if preprintlist else ''
+    str_book       = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Books'), 'Books') if booklist else ''
+    str_chapter    = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Book Chapters'), 'Book Chapters') if bookchapterlist else ''
+    str_journal    = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Journal Articles'), 'Journals') if journallist else ''
+    str_conference = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Conference Articles'), 'Conferences') if conflist else ''
+    str_abstract   = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Conference Abstracts'), 'Abstracts') if abstractlist else ''
+    str_report     = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Research Reports'), 'Research Reports') if techreportlist else ''
+    str_thesis     = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Theses'), 'Theses') if thesislist else ''
+    str_misc       = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Miscellaneous Papers'), 'Miscellaneous Papers') if misclist else ''
 
     f1.write('''
     <p><big>&#8226;&nbsp;%s%s%s%s%s%s%s%s%s%s</big></p>
@@ -758,7 +758,7 @@ def write_entries_by_type(bib_entries):
     )
 
     # write list according to publication type
-    if len(preprintlist):
+    if preprintlist:
         f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Preprints'), 'Preprints'));
         f1.write('\n<ol>\n')
         preprintlist = sorted(preprintlist, cmp=cmp_by_year)
@@ -766,7 +766,7 @@ def write_entries_by_type(bib_entries):
             write_entry(e, f1, params)
         f1.write('\n</ol>\n\n\n')
 
-    if len(booklist):
+    if booklist:
         f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Books'), 'Books'));
         f1.write('\n<ol>\n')
         booklist = sorted(booklist, cmp=cmp_by_year)
@@ -774,7 +774,7 @@ def write_entries_by_type(bib_entries):
             write_entry(e, f1, params)
         f1.write('\n</ol>\n\n\n')
 
-    if len(bookchapterlist):
+    if bookchapterlist:
         f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Book Chapters'), 'Book Chapters'));
         f1.write('\n<ol>\n')
         bookchapterlist = sorted(bookchapterlist, cmp=cmp_by_year)
@@ -782,7 +782,7 @@ def write_entries_by_type(bib_entries):
             write_entry(e, f1, params)
         f1.write('\n</ol>\n\n\n')
 
-    if len(journallist):
+    if journallist:
         f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Journal Articles'), 'Journal Articles'));
         f1.write('\n<ol>\n')
         journallist = sorted(journallist, cmp=cmp_by_year)
@@ -790,7 +790,7 @@ def write_entries_by_type(bib_entries):
             write_entry(e, f1, params)
         f1.write('\n</ol>\n\n\n')
 
-    if len(conflist):
+    if conflist:
         f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Conference Articles'), 'Conference Articles'));
         f1.write('\n<ol>\n')
         conflist = sorted(conflist, cmp=cmp_by_year)
@@ -798,7 +798,7 @@ def write_entries_by_type(bib_entries):
             write_entry(e, f1, params)
         f1.write('\n</ol>\n\n\n')
 
-    if len(abstractlist):
+    if abstractlist:
         f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Conference Abstracts'), 'Conference Abstracts'));
         f1.write('\n<ol>\n')
         abstractlist = sorted(abstractlist, cmp=cmp_by_year)
@@ -806,7 +806,7 @@ def write_entries_by_type(bib_entries):
             write_entry(e, f1, params)
         f1.write('\n</ol>\n\n\n')
 
-    if len(techreportlist):
+    if techreportlist:
         f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Research Reports'), 'Research Reports'));
         f1.write('\n<ol>\n')
         techreportlist = sorted(techreportlist, cmp=cmp_by_year)
@@ -814,7 +814,7 @@ def write_entries_by_type(bib_entries):
             write_entry(e, f1, params)
         f1.write('\n</ol>\n\n\n')
 
-    if len(thesislist):
+    if thesislist:
         f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Theses'), 'Theses'));
         f1.write('\n<ol>\n')
         thesislist = sorted(thesislist, cmp=cmp_by_year)
@@ -822,7 +822,7 @@ def write_entries_by_type(bib_entries):
             write_entry(e, f1, params)
         f1.write('\n</ol>\n\n\n')
 
-    if len(misclist):
+    if misclist:
         f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Miscellaneous Papers'), 'Miscellaneous Papers'));
         f1.write('\n<ol>\n')
         misclist = sorted(misclist, cmp=cmp_by_year)
@@ -861,7 +861,7 @@ def write_entries_by_year(bib_entries):
         _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
         f1.write('%s\n\n' % count_str)
 
-    if len(year_entries_dict):
+    if year_entries_dict:
         years = sorted(year_entries_dict.keys(), reverse=True)
 
         str_type = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by type</b></a></span> &#8226;&nbsp;''' % os.path.basename(params['htmlfile_type']) if params['htmlfile_type'] else ''
