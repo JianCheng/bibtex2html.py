@@ -593,21 +593,15 @@ def write_entry(entry, fid, params):
     if not params['single_line']:
         fid.write('''<div class="publilinks">''')
         fid.write('\n')
+
     #  pdf
     pdf_link = get_pdflink_from_entry(entry)
-    if not params['use_icon'] or pdf_link=='':
-        fid.write('[')
     if pdf_link!='':
-        fid.write('<a target="%s" href="%s">' % (params['target_link'], pdf_link))
         if params['use_icon'] and params['icon_pdf']:
-            fid.write('<img align="middle" border="0" src="%s" alt="[pdf]"></a>' % (params['icon_pdf']))
+            fid.write('<a target="%s" href="%s"><img align="middle" border="0" src="%s" alt="[pdf]"></a>' % (params['target_link'], pdf_link, params['icon_pdf']))
         else:
-            fid.write('pdf</a>')
-    else:
-        fid.write('pdf')
-    if not params['use_icon'] or pdf_link=='':
-        fid.write(']')
-    fid.write('&nbsp;')
+            fid.write('[<a target="%s" href="%s">pdf</a>]' % (params['target_link'], pdf_link))
+        fid.write('&nbsp;')
 
     #  url, www, doi, hal_id
     href_link = get_wwwlink_from_entry(entry)
@@ -623,7 +617,6 @@ def write_entry(entry, fid, params):
         if not params['use_icon']:
             fid.write(']')
         fid.write('&nbsp;')
-
 
     bibid0 = entry['ID']
     bibid = bibid0.replace(':', u'-')
