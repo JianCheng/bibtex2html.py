@@ -185,7 +185,7 @@ def cmp_by_type(y, x):
     return 1
 
 
-def highlight_author(author, params):
+def highlight_author(author):
     """return a string with highlighted author"""
 
     authors = author.split(', ')
@@ -198,7 +198,7 @@ def highlight_author(author, params):
     return ', '.join(authors_new)
 
 
-def highlight_publisher(publisher, params):
+def highlight_publisher(publisher):
     """return a string with highlighted jounrls and conferences"""
 
     words_highlighted = params['journal_shortname_highlighted'] + params['conference_shortname_highlighted']
@@ -326,7 +326,18 @@ def get_publisher_shortname_from_entry(entry):
 
 
 def get_publisher_countnumber_from_entries(entries):
-    '''Get count numbers from entries'''
+    '''Get count numbers from entries for specific journals (conferences).
+
+    Parameters
+    ----------
+        entries :   list of entries
+
+    Returns
+    -------
+        count_name : list of journal (or conference) names
+        count_number: list of numbers
+        count_str :  output string in html format
+    '''
 
     count_name = []
     for name in params['count_publisher']:
@@ -353,7 +364,18 @@ def get_publisher_countnumber_from_entries(entries):
 
 
 def is_entry_selected_by_key(entry, k, v):
-    '''return true if entry is selected'''
+    '''return true if entry is selected by a given key and value list
+
+    Parameters
+    ----------
+        entry :    a bib entry
+        k :        key (string)
+        v :        value list (string list)
+
+    Returns
+    -------
+        output : True if it is selected
+    '''
 
     if k == 'year':
         return int(entry[k]) in v
@@ -388,7 +410,16 @@ def is_entry_selected_by_key(entry, k, v):
 
 
 def is_entry_selected(entry):
-    '''return true if entry is selected'''
+    '''return true if entry is selected
+
+    Parameters
+    ----------
+        entry :    a bib entry
+
+    Returns
+    -------
+        output : True if it is selected
+    '''
 
     if not params['selection_and'] and not params['selection_or']:
         return True
@@ -411,6 +442,7 @@ def is_entry_selected(entry):
 
 def get_anchor_name(name):
     '''get anchor from a string'''
+
     if name.isdigit():
         return 'year'+ name
     else:
@@ -419,6 +451,7 @@ def get_anchor_name(name):
 
 def clean_entry(entry):
     '''Clean up an entry'''
+
     for k, v in entry.items():
 
         # remove leading and trailing whitespace
@@ -486,137 +519,118 @@ def clean_entry(entry):
         entry[k] = v;
 
 
-def write_entry(entry, fid, params):
-    """Write entry to html file"""
+def get_entry_output(entry):
+    """Get output html string for a bib entry
+
+    Parameters
+    ----------
+        entry :   a bib entry
+
+    Returns
+    -------
+        output : string in html format for the bib entry
+    """
 
     # --- Start list ---
-    fid.write('\n')
-    fid.write('<li>\n')
+    out=['\n<li>\n']
 
     # --- author ---
     if entry.has_key('author'):
-        fid.write('<span class="author">')
-        fid.write(highlight_author(entry['author'], params))
-        fid.write('</span>,')
-
+        out.append('<span class="author">%s</span>,' % highlight_author(entry['author']))
         if not params['single_line']:
-            fid.write('<br>')
+            out.append('<br>')
 
-        fid.write('\n')
+        out.append('\n')
 
     # --- chapter ---
     chapter = False
     if entry.has_key('chapter'):
         chapter = True
-        fid.write('<span class="title">"')
-        fid.write(entry['chapter'])
-        fid.write('"</span>,')
+        out.append('<span class="title">"%s"</span>,' % entry['chapter'])
         if not params['single_line']:
-            fid.write('<br>')
+            out.append('<br>')
 
     # --- title ---
     if not(chapter):
-        fid.write('<span class="title">"')
-        fid.write(entry['title'])
-        fid.write('"</span>,')
+        out.append('<span class="title">"%s"</span>,' % entry['title'])
         if not params['single_line']:
-            fid.write('<br>')
+            out.append('<br>')
 
     # -- if book chapter --
     if chapter:
-        fid.write('in: ')
-        #  fid.write('<i>')
-        fid.write(entry['title'])
-        #  fid.write('</i>')
-        fid.write(', ')
-        fid.write(entry['publisher'])
+        out.append('in: %s, %s' % (entry['title'], entry['publisher']))
 
     if entry['ENTRYTYPE']=='book':
-        fid.write(entry['publisher'])
+        out.append(entry['publisher'])
 
-    fid.write('\n')
+    out.append('\n')
 
     # --- journal or similar ---
     if entry.has_key('journal'):
-        fid.write('<span class="publisher">')
-        fid.write(highlight_publisher(entry['journal'], params))
-        fid.write('</span>')
+        out.append('<span class="publisher">%s</span>' % highlight_publisher(entry['journal']))
     elif entry.has_key('booktitle'):
-        fid.write('<span class="publisher">')
+        out.append('<span class="publisher">')
         if entry['ENTRYTYPE'] in params['type_conference_paper']:
-            fid.write(highlight_publisher(entry['booktitle'], params))
+            out.append(highlight_publisher(entry['booktitle']))
         else:
-            fid.write(entry['booktitle'])
-        fid.write('</span>')
+            out.append(entry['booktitle'])
+        out.append('</span>')
     elif entry['ENTRYTYPE'] == 'phdthesis':
-        fid.write('PhD thesis, ')
-        fid.write(entry['school'])
+        out.append('PhD thesis, %s' % entry['school'])
     elif entry['ENTRYTYPE'] == 'techreport':
-        fid.write('Tech. Report, ')
-        fid.write(entry['number'])
+        out.append('Tech. Report, %s' % entry['number'])
 
     # --- volume, pages, notes etc ---
     #  print(entry)
     if entry.has_key('volume'):
-        fid.write(', Vol. ')
-        fid.write(entry['volume'])
-    if (entry.has_key('number') and entry['ENTRYTYPE']!='techreport'):
-        fid.write(', No. ')
-        fid.write(entry['number'])
+        out.append(', Vol. %s' % entry['volume'])
+    if entry.has_key('number') and entry['ENTRYTYPE']!='techreport':
+        out.append(', No. %s' % entry['number'])
     if entry.has_key('pages'):
-        fid.write(', p.')
-        fid.write(entry['pages'])
+        out.append(', p.%s' % entry['pages'])
     #  elif entry.has_key('note'):
-    #      if journal or chapter: fid.write(', ')
-    #      fid.write(entry['note'])
+    #      if journal or chapter: out.append(', ')
+    #      out.append(entry['note'])
     if entry.has_key('month'):
-        fid.write(', ')
-        fid.write(entry['month'])
+        out.append(', %s' % entry['month'])
 
     # --- year ---
-    fid.write('<span class="year">')
-    #fid.write(', ');
-    fid.write(', ');
-    fid.write(entry['year'])
-    fid.write('</span>')
-    #fid.write(',\n')
+    out.append(', <span class="year">%s</span>' % entry['year'])
 
     # final period
-    fid.write('.')
-    fid.write('\n')
+    out.append('.\n')
 
     if not params['single_line']:
-        fid.write('<br>')
+        out.append('<br>')
 
     # --- Links ---
 
     if not params['single_line']:
-        fid.write('''<div class="publilinks">''')
-        fid.write('\n')
+        out.append('<div class="publilinks">\n')
 
     #  pdf
     pdf_link = get_pdflink_from_entry(entry)
     if pdf_link!='':
         if params['use_icon'] and params['icon_pdf']:
-            fid.write('<a target="%s" href="%s"><img align="middle" border="0" src="%s" alt="[pdf]"></a>' % (params['target_link'], pdf_link, params['icon_pdf']))
+            out.append('<a target="%s" href="%s"><img align="middle" border="0" src="%s" alt="[pdf]"></a>' % (params['target_link'], pdf_link, params['icon_pdf']))
         else:
-            fid.write('[<a target="%s" href="%s">pdf</a>]' % (params['target_link'], pdf_link))
-        fid.write('&nbsp;')
+            out.append('[<a target="%s" href="%s">pdf</a>]' % (params['target_link'], pdf_link))
+        out.append('&nbsp;')
 
     #  url, www, doi, hal_id
     href_link = get_wwwlink_from_entry(entry)
     if href_link!='':
-        fid.write('\n')
+        out.append('\n')
         if not params['use_icon']:
-            fid.write('[')
-        fid.write('<a target="%s" href="%s">' % (params['target_link'], href_link))
+            out.append('[')
+        out.append('<a target="%s" href="%s">' % (params['target_link'], href_link))
         if params['use_icon'] and params['icon_www']:
-            fid.write('<img align="middle" border="0" src="%s" alt="[www]"></a>' % (params['icon_www']))
+            out.append('<img align="middle" border="0" src="%s" alt="[www]"></a>' % (params['icon_www']))
         else:
-            fid.write('link</a>')
+            out.append('link</a>')
         if not params['use_icon']:
-            fid.write(']')
-        fid.write('&nbsp;')
+            out.append(']')
+        out.append('&nbsp;')
 
     bibid0 = entry['ID']
     bibid = bibid0.replace(':', u'-')
@@ -625,63 +639,64 @@ def write_entry(entry, fid, params):
 
     # bibtex
     if show_bibtex:
-        fid.write('\n')
+        out.append('\n')
         if params['use_bootstrap_dialog']:
-            fid.write('''[<a type="button" data-toggle="modal" data-target="#bib-%s">bibtex</a>]&nbsp;''' % (bibid) )
+            out.append('''[<a type="button" data-toggle="modal" data-target="#bib-%s">bibtex</a>]&nbsp;''' % (bibid) )
         else:
-            fid.write('''[<a id="blk-%s" href="javascript:toggle('bib-%s', 'blk-%s');">bibtex</a>]&nbsp;''' % (bibid, bibid, bibid) )
+            out.append('''[<a id="blk-%s" href="javascript:toggle('bib-%s', 'blk-%s');">bibtex</a>]&nbsp;''' % (bibid, bibid, bibid) )
 
     #  abstract
     if show_abstract:
-        fid.write('\n')
+        out.append('\n')
         if params['use_bootstrap_dialog']:
-            fid.write('''[<a type="button" data-toggle="modal" data-target="#abs-%s">abstract</a>]&nbsp;''' % (bibid) )
+            out.append('''[<a type="button" data-toggle="modal" data-target="#abs-%s">abstract</a>]&nbsp;''' % (bibid) )
         else:
-            fid.write('''[<a id="alk-%s" href="javascript:toggle('abs-%s', 'alk-%s');">abstract</a>]&nbsp;''' % (bibid, bibid, bibid) )
+            out.append('''[<a id="alk-%s" href="javascript:toggle('abs-%s', 'alk-%s');">abstract</a>]&nbsp;''' % (bibid, bibid, bibid) )
 
     #  download fields
     for i_str in params['bibtex_fields_download']:
         if entry.has_key(i_str) and entry[i_str]!='':
-            fid.write('\n')
-            fid.write('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (params['target_link'], entry[i_str], i_str) )
+            out.append('\n')
+            out.append('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (params['target_link'], entry[i_str], i_str) )
 
     #  citation
     if params['show_citation'] and entry['ENTRYTYPE'] in params['show_citation_types'] and int(entry['year']) <= params['show_citation_year']:
-        fid.write('\n')
-        fid.write('[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (entry['title'], params['target_link_citation']) )
+        out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (entry['title'], params['target_link_citation']) )
 
     #  note
     for i_str in params['bibtex_fields_note']:
         if entry.has_key(i_str) and entry[i_str]!='':
-            fid.write('\n')
-            fid.write('(<span class="%s">%s</span>)&nbsp;' % (i_str if i_str!='note' else 'hlnote0', entry[i_str]))
+            out.append('\n(<span class="%s">%s</span>)&nbsp;' % (i_str if i_str!='note' else 'hlnote0', entry[i_str]))
 
-    fid.write('\n')
+    out.append('\n')
     if not params['single_line']:
-        fid.write('</div>')
+        out.append('</div>')
 
     if show_bibtex:
-        fid.write('\n')
+        out.append('\n')
         bibstr = get_bibtex_from_entry(entry)
         if params['use_bootstrap_dialog']:
-            fid.write('''<div class="modal fade" id="bib-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Bibtex</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (bibid, bibstr))
+            out.append('''<div class="modal fade" id="bib-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Bibtex</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (bibid, bibstr))
         else:
-            fid.write('''<div class="bibtex" id="bib-%s" style="display: none;">\n<pre>%s</pre></div>''' % (bibid, bibstr))
+            out.append('''<div class="bibtex" id="bib-%s" style="display: none;">\n<pre>%s</pre></div>''' % (bibid, bibstr))
 
     #  abstract
     if show_abstract:
-        fid.write('\n')
+        out.append('\n')
         if params['use_bootstrap_dialog']:
-            fid.write('''<div class="modal fade" id="abs-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Abstract</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (bibid, "\n".join(textwrap.wrap(entry['abstract'],68))))
+            out.append('''<div class="modal fade" id="abs-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Abstract</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (bibid, "\n".join(textwrap.wrap(entry['abstract'],68))))
         else:
-            fid.write('''<div class="abstract" id="abs-%s" style="display: none;">%s</div>''' % (bibid, entry['abstract']))
+            out.append('''<div class="abstract" id="abs-%s" style="display: none;">%s</div>''' % (bibid, entry['abstract']))
 
     # Terminate the list entry
-    fid.write('\n</li>')
+    out.append('\n</li>')
 
     if params['add_blank_line_after_item']:
-        fid.write('<br>')
-    fid.write('\n')
+        out.append('<br>')
+
+    out.append('\n')
+
+    return ''.join(out)
 
 
 def write_entries_by_type(bib_entries):
@@ -734,7 +749,6 @@ def write_entries_by_type(bib_entries):
         else:
             misclist.append(e)
 
-
     # write list of sections, papers
     paperlists = [preprintlist, booklist, bookchapterlist, journallist, conflist, abstractlist, techreportlist, thesislist, misclist]
     seclist = ['Preprints', 'Books', 'Book Chapters', 'Journal Articles', 'Conference Articles', 'Conference Abstracts', 'Research Reports', 'Theses', 'Miscellaneous']
@@ -755,7 +769,7 @@ def write_entries_by_type(bib_entries):
             f1.write('\n<ol>\n')
             papers = sorted(papers, cmp=cmp_by_year)
             for e in papers:
-                write_entry(e, f1, params)
+                f1.write(get_entry_output(e))
             f1.write('\n</ol>\n\n\n')
 
     f1.write(params['afterlog'])
@@ -806,9 +820,8 @@ def write_entries_by_year(bib_entries):
             papers = year_entries_dict[y]
             papers = sorted(papers, cmp=cmp_by_type)
             for e in papers:
-                write_entry(e, f1, params)
+                f1.write(get_entry_output(e))
             f1.write('\n</ol>\n\n\n')
-
 
     f1.write(params['afterlog'])
     f1.close()
