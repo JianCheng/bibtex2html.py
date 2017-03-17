@@ -409,30 +409,37 @@ def is_entry_selected_by_key(entry, k, v):
     return True
 
 
-def is_entry_selected(entry):
+def is_entry_selected(entry, selection_and=None, selection_or=None):
     '''return true if entry is selected
 
     Parameters
     ----------
-        entry :    a bib entry
+        entry          :  a bib entry
+        selection_and  :  dict with conditions (and operator)
+        selection_or   :  dict with conditions (or operator)
 
     Returns
     -------
         output : True if it is selected
     '''
 
-    if not params['selection_and'] and not params['selection_or']:
+    if selection_and is None:
+        selection_and = params['selection_and']
+    if selection_or is None:
+        selection_or = params['selection_or']
+
+    if not selection_and and not selection_or:
         return True
-    if params['selection_and'] and params['selection_or']:
+    if selection_and and selection_or:
         raise('selection_and and selection_or cannot be used together')
 
-    if params['selection_and']:
-        for k, v in params['selection_and'].items():
+    if selection_and:
+        for k, v in selection_and.items():
             if not is_entry_selected_by_key(entry, k, v):
                 return False
         return True
-    elif params['selection_or']:
-        for k, v in params['selection_or'].items():
+    elif selection_or:
+        for k, v in selection_or.items():
             if is_entry_selected_by_key(entry, k, v):
                 return True
         return False
