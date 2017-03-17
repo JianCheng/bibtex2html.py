@@ -343,9 +343,9 @@ def get_publisher_countnumber_from_entries(entries):
                 count_number[i] += 1
 
     count_str_list=['<p>&#8226;&nbsp;']
-    for i, name in enumerate(count_name):
-        if count_number[i]>0:
-            str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, count_number[i])
+    for name, num in zip(count_name, count_number):
+        if num>0:
+            str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
             count_str_list.append(str_count)
     count_str_list.append('</p>')
 
@@ -711,12 +711,8 @@ def write_entries_by_type(bib_entries):
     thesislist = []
     misclist = []
 
-
     # Iterate over the entries
     for e in bib_entries:
-
-        #  if _verbose>=2:
-        #      print 'e before clean 2=', e
 
         arxiv_id = get_arxivID_from_entry(e)
         if arxiv_id!='':
@@ -739,96 +735,28 @@ def write_entries_by_type(bib_entries):
             misclist.append(e)
 
 
+    # write list of sections, papers
+    paperlists = [preprintlist, booklist, bookchapterlist, journallist, conflist, abstractlist, techreportlist, thesislist, misclist]
+    seclist = ['Preprints', 'Books', 'Book Chapters', 'Journal Articles', 'Conference Articles', 'Conference Abstracts', 'Research Reports', 'Theses', 'Miscellaneous']
+    secline = ['Preprints', 'Books', 'Book Chapters', 'Journals', 'Conferences', 'Abstracts', 'Research Reports', 'Theses', 'Miscellaneous']
+
     # write list of sections
-    str_year       = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by year</b></a></span> &#8226;&nbsp;''' % os.path.basename(params['htmlfile_year']) if params['htmlfile_year'] else ''
-
-    str_preprint   = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Preprints'), 'Preprints') if preprintlist else ''
-    str_book       = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Books'), 'Books') if booklist else ''
-    str_chapter    = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Book Chapters'), 'Book Chapters') if bookchapterlist else ''
-    str_journal    = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Journal Articles'), 'Journals') if journallist else ''
-    str_conference = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Conference Articles'), 'Conferences') if conflist else ''
-    str_abstract   = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Conference Abstracts'), 'Abstracts') if abstractlist else ''
-    str_report     = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Research Reports'), 'Research Reports') if techreportlist else ''
-    str_thesis     = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Theses'), 'Theses') if thesislist else ''
-    str_misc       = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name('Miscellaneous Papers'), 'Miscellaneous Papers') if misclist else ''
-
-    f1.write('''
-    <p><big>&#8226;&nbsp;%s%s%s%s%s%s%s%s%s%s</big></p>
-    ''' % (str_preprint, str_year, str_book, str_chapter, str_journal, str_conference, str_abstract, str_report, str_thesis, str_misc)
-    )
+    str_year = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by year</b></a></span> &#8226;&nbsp;''' % os.path.basename(params['htmlfile_year']) if params['htmlfile_year'] else ''
+    f1.write('<p><big>&#8226;&nbsp;%s' % str_year)
+    for papers, sec, secl in zip(paperlists, seclist, secline):
+        strTmp = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name(sec), secl) if papers else ''
+        f1.write(strTmp)
+    f1.write( '</big></p>\n\n' )
 
     # write list according to publication type
-    if preprintlist:
-        f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Preprints'), 'Preprints'));
-        f1.write('\n<ol>\n')
-        preprintlist = sorted(preprintlist, cmp=cmp_by_year)
-        for e in preprintlist:
-            write_entry(e, f1, params)
-        f1.write('\n</ol>\n\n\n')
-
-    if booklist:
-        f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Books'), 'Books'));
-        f1.write('\n<ol>\n')
-        booklist = sorted(booklist, cmp=cmp_by_year)
-        for e in booklist:
-            write_entry(e, f1, params)
-        f1.write('\n</ol>\n\n\n')
-
-    if bookchapterlist:
-        f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Book Chapters'), 'Book Chapters'));
-        f1.write('\n<ol>\n')
-        bookchapterlist = sorted(bookchapterlist, cmp=cmp_by_year)
-        for e in bookchapterlist:
-            write_entry(e, f1, params)
-        f1.write('\n</ol>\n\n\n')
-
-    if journallist:
-        f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Journal Articles'), 'Journal Articles'));
-        f1.write('\n<ol>\n')
-        journallist = sorted(journallist, cmp=cmp_by_year)
-        for e in journallist:
-            write_entry(e, f1, params)
-        f1.write('\n</ol>\n\n\n')
-
-    if conflist:
-        f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Conference Articles'), 'Conference Articles'));
-        f1.write('\n<ol>\n')
-        conflist = sorted(conflist, cmp=cmp_by_year)
-        for e in conflist:
-            write_entry(e, f1, params)
-        f1.write('\n</ol>\n\n\n')
-
-    if abstractlist:
-        f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Conference Abstracts'), 'Conference Abstracts'));
-        f1.write('\n<ol>\n')
-        abstractlist = sorted(abstractlist, cmp=cmp_by_year)
-        for e in abstractlist:
-            write_entry(e, f1, params)
-        f1.write('\n</ol>\n\n\n')
-
-    if techreportlist:
-        f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Research Reports'), 'Research Reports'));
-        f1.write('\n<ol>\n')
-        techreportlist = sorted(techreportlist, cmp=cmp_by_year)
-        for e in techreportlist:
-            write_entry(e, f1, params)
-        f1.write('\n</ol>\n\n\n')
-
-    if thesislist:
-        f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Theses'), 'Theses'));
-        f1.write('\n<ol>\n')
-        thesislist = sorted(thesislist, cmp=cmp_by_year)
-        for e in thesislist:
-            write_entry(e, f1, params)
-        f1.write('\n</ol>\n\n\n')
-
-    if misclist:
-        f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name('Miscellaneous Papers'), 'Miscellaneous Papers'));
-        f1.write('\n<ol>\n')
-        misclist = sorted(misclist, cmp=cmp_by_year)
-        for e in misclist:
-            write_entry(e, f1, params)
-        f1.write('\n</ol>\n\n\n')
+    for papers, sec in zip(paperlists, seclist):
+        if papers:
+            f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name(sec), sec));
+            f1.write('\n<ol>\n')
+            papers = sorted(papers, cmp=cmp_by_year)
+            for e in papers:
+                write_entry(e, f1, params)
+            f1.write('\n</ol>\n\n\n')
 
     f1.write(params['afterlog'])
     f1.close()
@@ -865,7 +793,6 @@ def write_entries_by_year(bib_entries):
         years = sorted(year_entries_dict.keys(), reverse=True)
 
         str_type = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by type</b></a></span> &#8226;&nbsp;''' % os.path.basename(params['htmlfile_type']) if params['htmlfile_type'] else ''
-
         f1.write('<p><big>&#8226;&nbsp;%s' % str_type)
         for y in years:
             f1.write('''<span style="font-size: 20px;"><a href="%s#year%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_year']), y, y) )
