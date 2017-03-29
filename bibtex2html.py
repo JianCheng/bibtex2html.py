@@ -167,7 +167,7 @@ def cmp_by_type(y, x):
         for word in params['journal_shortname_highlighted']:
             if x['journal'].find('(%s)' % word)>=0: x_hl=True
             if y['journal'].find('(%s)' % word)>=0: y_hl=True
-        for word in params['journal_fullname_highlighted_insensitive']:
+        for word in params['journal_fullname_highlighted_lower']:
             if not x_hl and x['journal'].find(word)>=0: x_hl=True
             if not y_hl and y['journal'].find(word)>=0: y_hl=True
         if x_hl and not y_hl:  return 1
@@ -203,8 +203,7 @@ def highlight_publisher(publisher):
 
     words_highlighted = params['journal_shortname_highlighted'] + params['conference_shortname_highlighted']
 
-    words = publisher.split(' ')
-    if len(words)==1 or publisher.lower() in params['journal_fullname_highlighted_insensitive']:
+    if publisher.lower() in params['journal_fullname_highlighted_lower']:
         return '<b>%s</b>' % publisher
     else:
         dem_1 = publisher.find('(')
@@ -910,7 +909,7 @@ def main():
         print('params = %s' % params )
 
 
-    params['journal_fullname_highlighted_insensitive'] = [name.lower() for name in params['journal_fullname_highlighted'] ]
+    params['journal_fullname_highlighted_lower'] = [name.lower() for name in params['journal_fullname_highlighted'] ]
     current_year = datetime.date.today().year
     params['show_citation_year'] = current_year - params['show_citation_before_years']
 
