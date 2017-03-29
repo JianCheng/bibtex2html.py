@@ -271,6 +271,17 @@ def get_wwwlink_from_entry(entry):
         return ''
 
 
+def get_journal_from_entry(entry):
+    '''get journal from entry (keys: journal, eprint)'''
+
+    if entry.has_key('journal'):
+        return entry['journal']
+    elif entry.has_key('eprint'):
+        return entry['eprint']
+    else:
+        return ''
+
+
 def get_bibtex_from_entry(entry):
     '''Get bibtex string from an entry. Remove some non-standard fields.'''
 
@@ -287,6 +298,12 @@ def get_bibtex_from_entry(entry):
         www_link = get_wwwlink_from_entry(entry2)
         if www_link!='':
             entry2['url'] = www_link
+
+    #  add journal from other keys
+    if not entry2.has_key('journal'):
+        journal = get_journal_from_entry(entry2)
+        if journal!='':
+            entry2['journal'] = journal
 
     entry_standard = {}
     keep_list = ['ENTRYTYPE', 'ID']
@@ -581,6 +598,8 @@ def get_entry_output(entry):
         else:
             out.append(entry['booktitle'])
         out.append('</span>')
+    elif entry.has_key('eprint'):
+        out.append('<span class="publisher">%s</span>' % highlight_publisher(entry['eprint']))
     elif entry['ENTRYTYPE'] == 'phdthesis':
         out.append('PhD thesis, %s' % entry['school'])
     elif entry['ENTRYTYPE'] == 'techreport':
