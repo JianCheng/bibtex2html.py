@@ -244,7 +244,7 @@ def get_arxivID_from_entry(entry):
 def get_pdflink_from_entry(entry):
     '''get pdf link from bib entry (keys: pdf, hal_id)'''
 
-    if entry.has_key('pdf'):
+    if entry.has_key('pdf') and entry['pdf']!='':
         return entry['pdf']
     elif entry.has_key('hal_id'):
         return 'https://hal.archives-ouvertes.fr/%s/document' % entry['hal_id']
@@ -257,7 +257,7 @@ def get_pdflink_from_entry(entry):
 def get_wwwlink_from_entry(entry):
     '''get website link from bib entry (keys: url, www, doi, hal_id)'''
 
-    if entry.has_key('url'):
+    if entry.has_key('url') and entry['url']!='':
         return entry['url']
     elif entry.has_key('www'):
         return entry['www']
@@ -274,7 +274,7 @@ def get_wwwlink_from_entry(entry):
 def get_journal_from_entry(entry):
     '''get journal from entry (keys: journal, eprint)'''
 
-    if entry.has_key('journal'):
+    if entry.has_key('journal') and entry['journal']!='':
         return entry['journal']
     elif entry.has_key('eprint'):
         return entry['eprint']
@@ -282,28 +282,34 @@ def get_journal_from_entry(entry):
         return ''
 
 
+def add_empty_fields_in_entry(entry):
+    '''add some fields using other fields'''
+
+    #  add pdf_link from other keys
+    if not entry.has_key('pdf') or entry['pdf']=='':
+        pdf_link = get_pdflink_from_entry(entry)
+        if pdf_link!='':
+            entry['pdf'] = pdf_link
+
+    #  add url from other keys
+    if not entry.has_key('url') or entry['url']=='':
+        www_link = get_wwwlink_from_entry(entry)
+        if www_link!='':
+            entry['url'] = www_link
+
+    #  add journal from other keys
+    if not entry.has_key('journal') or entry['journal']=='':
+        journal = get_journal_from_entry(entry)
+        if journal!='':
+            entry['journal'] = journal
+
+
 def get_bibtex_from_entry(entry):
     '''Get bibtex string from an entry. Remove some non-standard fields.'''
 
     entry2 = entry.copy()
 
-    #  add pdf_link from other keys
-    if not entry2.has_key('pdf'):
-        pdf_link = get_pdflink_from_entry(entry2)
-        if pdf_link!='':
-            entry2['pdf'] = pdf_link
-
-    #  add url from other keys
-    if not entry2.has_key('url'):
-        www_link = get_wwwlink_from_entry(entry2)
-        if www_link!='':
-            entry2['url'] = www_link
-
-    #  add journal from other keys
-    if not entry2.has_key('journal'):
-        journal = get_journal_from_entry(entry2)
-        if journal!='':
-            entry2['journal'] = journal
+    add_empty_fields_in_entry(entry2)
 
     entry_standard = {}
     keep_list = ['ENTRYTYPE', 'ID']
@@ -1011,7 +1017,13 @@ def main():
     for e in bib_entries:
         if _verbose>=2:
             print 'e before clean=', e
+
+        #  clean entry for output
         clean_entry(e)
+
+        #  fill some empty fields
+        add_empty_fields_in_entry(e)
+
         if _verbose>=2:
             print 'e after clean =', e
 
