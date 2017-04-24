@@ -304,12 +304,16 @@ def add_empty_fields_in_entry(entry):
             entry['journal'] = journal
 
 
-def get_bibtex_from_entry(entry):
+def get_bibtex_from_entry(entry, add_and=False):
     '''Get bibtex string from an entry. Remove some non-standard fields.'''
 
     entry2 = entry.copy()
 
     add_empty_fields_in_entry(entry2)
+
+    if add_and:
+        authors = entry2['author'].split(', ')
+        entry2['author'] = ' and '.join(authors)
 
     entry_standard = {}
     keep_list = ['ENTRYTYPE', 'ID']
@@ -705,7 +709,7 @@ def get_entry_output(entry):
 
     if show_bibtex:
         out.append('\n')
-        bibstr = get_bibtex_from_entry(entry)
+        bibstr = get_bibtex_from_entry(entry, add_and=True)
         if params['use_bootstrap_dialog']:
             out.append('''<div class="modal fade" id="bib-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Bibtex</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (bibid, bibstr))
         else:
