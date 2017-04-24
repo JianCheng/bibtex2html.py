@@ -5,7 +5,7 @@
 Description: Convert bibtex to html.
 
 Usage:
-  bibtex2html.py <bibfile> <htmlfile> [-v <verbose>]  [--conf <conffile>] [-i <input>]
+  bibtex2html.py <bibfile> <htmlfile> [-v <verbose>]  [--conf <conffile>] [-i <input>] [--outbib <outbibfile>]
   bibtex2html.py (-h | --help)
 
 Options:
@@ -15,9 +15,11 @@ Options:
 
   -c --conf <conffile>     Configuration file.
   -i --input   <input>     Input cmd parameters which can override some parameters in -c.
+  --outbib <outbibfileb>   Output .bib file with cleaned and selected bib entries
 
 Examples:
 bibtex2html.py papers.bib papers.html -c papers_conf.ini
+bibtex2html.py papers.bib papers.html -c papers_conf.ini --outbib out.bib
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'css_file': 'style.css'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'selection_and': {'author': ['Jian Cheng'], 'year':[2010,2013] }}"
@@ -61,6 +63,8 @@ params['author_names_highlighted'] = []
 # used for selection, select entries from bib file
 params['selection_and'] = {}
 params['selection_or'] = {}
+
+params['outbibfile'] = ''
 
 # show the number of papers in specific journals and conferences
 params['show_count_number'] = True
@@ -864,6 +868,20 @@ def write_entries_by_year(bib_entries):
     print('Covert %s to %s' % (params['bibfile'], params['htmlfile_year']))
 
 
+def write_entries_to_bibfile(bib_entries):
+    '''write entries into a bib file'''
+
+    f1 = codecs.open(params['outbibfile'], 'w', encoding=params['encoding'])
+
+    for entry in bib_entries:
+        bibstr = get_bibtex_from_entry(entry, add_and=True)
+        f1.write(bibstr)
+        f1.write('\n\n')
+    f1.close()
+
+    print('Write %s (cleaned and selected) to %s' % (params['bibfile'], params['outbibfile']))
+
+
 def main():
 
     args = docopt(__doc__, version='1.0')
@@ -874,6 +892,7 @@ def main():
     _verbose = int(args['--verbose'])
     _conffile = args['--conf']
     _input = args['<input>']
+    _outbibfile = args['--outbib']
 
     if _verbose>=1:
         print(args)
@@ -930,6 +949,8 @@ def main():
         raise('wrong show_paper_style')
 
     params['bibfile'] = _bibfile
+    if _outbibfile:
+        params['outbibfile'] = _outbibfile
 
     #  add conferences
     params['count_publisher'] = params['count_publisher'] + params['conference_shortname_highlighted']
@@ -1042,6 +1063,9 @@ def main():
     elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
         write_entries_by_type(entries_selected);
         write_entries_by_year(entries_selected);
+
+    if params['outbibfile']:
+        write_entries_to_bibfile(entries_selected)
 
 
 if __name__ == '__main__':
