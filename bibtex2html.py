@@ -437,7 +437,7 @@ def is_entry_selected_by_key(entry, k, v):
                 if name in v:
                     return True
     else:
-        raise('Wrong selection keys!')
+        raise ValueError('Wrong selection keys!')
 
     return True
 
@@ -464,7 +464,7 @@ def is_entry_selected(entry, selection_and=None, selection_or=None):
     if not selection_and and not selection_or:
         return True
     if selection_and and selection_or:
-        raise('selection_and and selection_or cannot be used together')
+        raise ValueError('selection_and and selection_or cannot be used together')
 
     if selection_and:
         for k, v in selection_and.items():
@@ -477,7 +477,7 @@ def is_entry_selected(entry, selection_and=None, selection_or=None):
                 return True
         return False
     else:
-        raise('Wrong logic here')
+        raise Exception('Wrong logic here')
 
 
 def get_anchor_name(name):
@@ -499,7 +499,7 @@ def get_bulleted_list_str():
     elif params['bulleted_list']=='ol_reversed':
         return '<ol reversed>', '</ol>'
     else:
-        raise("Wrong params['bulleted_list']. Must be 'ol', 'ul', 'ol_reversed'")
+        raise ValueError("Wrong params['bulleted_list']. Must be 'ol', 'ul', 'ol_reversed'")
 
 
 def clean_entry(entry):
@@ -964,7 +964,7 @@ def main():
         params['htmlfile_type'] = '%s_by_type%s' %(file_name, file_ext)
         params['htmlfile_year'] = '%s_by_year%s' %(file_name, file_ext)
     else:
-        raise('wrong show_paper_style')
+        raise ValueError('wrong show_paper_style')
 
     params['bibfile'] = _bibfile
     if _outbibfile:
