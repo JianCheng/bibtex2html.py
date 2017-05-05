@@ -107,6 +107,9 @@ params['target_link_citation'] = u'_blank'
 #  If false, show multiple lines
 params['single_line'] = False
 
+#  Use ordered list if 'ol', unordered list if 'ul'
+params['bulleted_list'] = 'ol'
+
 params['show_abstract'] = True
 params['show_bibtex'] = True
 params['use_bootstrap_dialog'] = True
@@ -486,6 +489,19 @@ def get_anchor_name(name):
         return name.lower().replace(' ', '-')
 
 
+def get_bulleted_list_str():
+    '''get html string for bulleted list'''
+
+    if params['bulleted_list']=='ol':
+        return '<ol>', '</ol>'
+    elif params['bulleted_list']=='ul':
+        return '<ul>', '</ul>'
+    elif params['bulleted_list']=='ol_reversed':
+        return '<ol reversed>', '</ol>'
+    else:
+        raise("Wrong params['bulleted_list']. Must be 'ol', 'ul', 'ol_reversed'")
+
+
 def clean_entry(entry):
     '''Clean up an entry'''
 
@@ -801,15 +817,16 @@ def write_entries_by_type(bib_entries):
         f1.write(strTmp)
     f1.write( '</big></p>\n\n' )
 
+    ol_1, ol_2 = get_bulleted_list_str()
     # write list according to publication type
     for papers, sec in zip(paperlists, seclist):
         if papers:
             f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name(sec), sec));
-            f1.write('\n<ol>\n')
+            f1.write('\n%s\n' % ol_1)
             papers = sorted(papers, cmp=cmp_by_year)
             for e in papers:
                 f1.write(get_entry_output(e))
-            f1.write('\n</ol>\n\n\n')
+            f1.write('\n%s\n\n\n' % ol_2)
 
     f1.write(params['afterlog'])
     f1.close()
@@ -842,6 +859,7 @@ def write_entries_by_year(bib_entries):
         _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
         f1.write('%s\n\n' % count_str)
 
+    ol_1, ol_2 = get_bulleted_list_str()
     if year_entries_dict:
         years = sorted(year_entries_dict.keys(), reverse=True)
 
@@ -855,12 +873,12 @@ def write_entries_by_year(bib_entries):
             #  print 'y0=', y
             #  print 'y1=', year_entries_dict[y]
             f1.write('\n<h2><a name="year%s"></a>%s</h2>\n' % (y,y));
-            f1.write('\n<ol>\n')
+            f1.write('\n%s\n' % ol_1)
             papers = year_entries_dict[y]
             papers = sorted(papers, cmp=cmp_by_type)
             for e in papers:
                 f1.write(get_entry_output(e))
-            f1.write('\n</ol>\n\n\n')
+            f1.write('\n%s\n\n\n' % ol_2)
 
     f1.write(params['afterlog'])
     f1.close()
@@ -911,7 +929,7 @@ def main():
                          'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted', \
                          'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', \
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding', \
-                         'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css', 'count_publisher', 'selection_and', 'selection_or']:
+                         'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css', 'count_publisher', 'selection_and', 'selection_or', 'bulleted_list']:
             if config.has_option(param_str, name_str):
                 params[name_str] = ast.literal_eval(config.get(param_str,name_str))
 
