@@ -18,9 +18,12 @@ Options:
   --outbib <outbibfileb>   Output .bib file with cleaned and selected bib entries
 
 Examples:
+
+bibtex2html.py papers.bib papers.html
 bibtex2html.py papers.bib papers.html -c papers_conf.ini
 bibtex2html.py papers.bib papers.html -c papers_conf.ini --outbib out.bib
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type'}"
+bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'bulleted_list':'ol_reversed'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'css_file': 'style.css'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'selection_and': {'author': ['Jian Cheng'], 'year':[2010,2013] }}"
 
@@ -831,7 +834,7 @@ def write_entries_by_type(bib_entries):
     f1.write(params['afterlog'])
     f1.close()
 
-    print('Covert %s to %s' % (params['bibfile'], params['htmlfile_type']))
+    print('Convert %s to %s' % (params['bibfile'], params['htmlfile_type']))
 
 
 def write_entries_by_year(bib_entries):
@@ -883,7 +886,7 @@ def write_entries_by_year(bib_entries):
     f1.write(params['afterlog'])
     f1.close()
 
-    print('Covert %s to %s' % (params['bibfile'], params['htmlfile_year']))
+    print('Convert %s to %s' % (params['bibfile'], params['htmlfile_year']))
 
 
 def write_entries_to_bibfile(bib_entries):
