@@ -256,10 +256,10 @@ def get_pdflink_from_entry(entry):
 
     if entry.has_key('pdf') and entry['pdf']!='':
         return entry['pdf']
-    elif entry.has_key('hal_id'):
-        return 'https://hal.archives-ouvertes.fr/%s/document' % entry['hal_id']
     elif get_arxivID_from_entry(entry)!='':
         return 'https://arxiv.org/pdf/%s.pdf' % get_arxivID_from_entry(entry)
+    elif entry.has_key('hal_id'):
+        return 'https://hal.archives-ouvertes.fr/%s/document' % entry['hal_id']
     else:
         return ''
 
@@ -273,10 +273,10 @@ def get_wwwlink_from_entry(entry):
         return entry['www']
     elif entry.has_key('doi'):
         return 'https://dx.doi.org/%s' % entry['doi']
-    elif entry.has_key('hal_id'):
-        return 'https://hal.archives-ouvertes.fr/%s' % entry['hal_id']
     elif get_arxivID_from_entry(entry)!='':
         return 'https://arxiv.org/abs/%s' % get_arxivID_from_entry(entry)
+    elif entry.has_key('hal_id'):
+        return 'https://hal.archives-ouvertes.fr/%s' % entry['hal_id']
     else:
         return ''
 
@@ -906,7 +906,6 @@ def write_entries_to_bibfile(bib_entries):
 def main():
 
     args = docopt(__doc__, version='1.0')
-
 
     _bibfile = args['<bibfile>']
     _htmlfile = args['<htmlfile>']
