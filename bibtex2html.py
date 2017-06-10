@@ -439,6 +439,7 @@ def is_entry_selected_by_key(entry, k, v):
             for name in authorCorr_names:
                 if name in v:
                     return True
+        return False
     else:
         raise ValueError('Wrong selection keys!')
 
