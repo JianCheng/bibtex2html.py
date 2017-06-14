@@ -251,7 +251,7 @@ def get_totalcitations_hindex(scholarID):
     citations = unicode(career[0].get_text())
     hindex = unicode(career[2].get_text())
 
-    str_out = '''<span style="font-size: 20px;"><p>&#8226;&nbsp;<b>Total Citations</b>: <a href='%s'>%s</a> &#8226;&nbsp;  <b>H-Index</b>: <a href='%s'>%s</a></p></span>''' % (url0, citations, url0, hindex)
+    str_out = '''<p><big>&#8226;&nbsp;<b>Total Citations</b>: <a href='%s'>%s</a> &#8226;&nbsp;  <b>H-Index</b>: <a href='%s'>%s</a></big></p>''' % (url0, citations, url0, hindex)
 
     return citations, hindex, str_out
 
@@ -436,12 +436,12 @@ def get_publisher_countnumber_from_entries(entries):
             if name.lower()==name1.lower():
                 count_number[i] += 1
 
-    count_str_list=['<span style="font-size: 20px;"><p>&#8226;&nbsp;']
+    count_str_list=['<p>&#8226;&nbsp;']
     for name, num in zip(count_name, count_number):
         if num>0:
             str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
             count_str_list.append(str_count)
-    count_str_list.append('</p></span>')
+    count_str_list.append('</p>')
 
     return count_name, count_number, ''.join(count_str_list)
 
