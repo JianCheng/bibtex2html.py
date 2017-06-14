@@ -93,6 +93,8 @@ params['show_citation_types'] = [u'article', u'inproceedings', u'phdthesis', u'i
 
 #  'no', 'scholar.js' 'bs'
 params['show_citation'] = 'no'
+# show total citation by googlescholarID using bs
+params['show_total_citation'] = False
 # obtained by googlescholarID by using bs
 params['dict_title'] = {}
 
@@ -236,12 +238,31 @@ def highlight_publisher(publisher):
             return publisher
 
 
+def get_totalcitations_hindex(scholarID):
+    '''get citations and h-index from googlescholar id'''
+
+    openurl = FancyURLopener().open
+    url0 = u'https://scholar.google.com/citations?user=%s&hl=en' % scholarID
+    url = url0 + u'&view_op=list_works&sortby=pubdate&cstart=0&pagesize=1000'
+    soup = BeautifulSoup(openurl(url).read(), "lxml")
+
+    career = soup.findAll("td", { "class" : "gsc_rsb_std" }, text=True)
+
+    citations = unicode(career[0].get_text())
+    hindex = unicode(career[2].get_text())
+
+    str_out = '''<span style="font-size: 20px;"><p>&#8226;&nbsp;<b>Total Citations</b>: <a href='%s'>%s</a> &#8226;&nbsp;  <b>H-Index</b>: <a href='%s'>%s</a></p></span>''' % (url0, citations, url0, hindex)
+
+    return citations, hindex, str_out
+
+
+
 def get_title_citation_url(scholarID):
     '''get dictionary {title: [citations, url]} from a given googlescholar id'''
 
     openurl = FancyURLopener().open
-    url = u'https://scholar.google.com/citations?user=%s&hl=en' % scholarID
-    url = url + u'&view_op=list_works&sortby=pubdate&cstart=0&pagesize=1000'
+    url0 = u'https://scholar.google.com/citations?user=%s&hl=en' % scholarID
+    url = url0 + u'&view_op=list_works&sortby=pubdate&cstart=0&pagesize=1000'
     soup = BeautifulSoup(openurl(url).read(), "lxml")
 
     title = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_at" })]
@@ -415,12 +436,12 @@ def get_publisher_countnumber_from_entries(entries):
             if name.lower()==name1.lower():
                 count_number[i] += 1
 
-    count_str_list=['<p>&#8226;&nbsp;']
+    count_str_list=['<span style="font-size: 20px;"><p>&#8226;&nbsp;']
     for name, num in zip(count_name, count_number):
         if num>0:
             str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
             count_str_list.append(str_count)
-    count_str_list.append('</p>')
+    count_str_list.append('</p></span>')
 
     return count_name, count_number, ''.join(count_str_list)
 
@@ -747,7 +768,9 @@ def get_entry_output(entry):
 
     #  citation
     if entry['ENTRYTYPE'] in params['show_citation_types'] and int(entry['year']) <= params['show_citation_year']:
-        if params['show_citation']=='scholar.js':
+        if params['show_citation']=='no':
+            pass
+        elif params['show_citation']=='scholar.js':
             out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (entry['title'], params['target_link_citation']) )
         elif params['show_citation']=='bs':
             citations_url = params['dict_title'][entry['title'].lower()]
@@ -802,6 +825,10 @@ def write_entries_by_type(bib_entries):
 
     if params['show_page_title']:
         f1.write('<h1>%s</h1>\n\n' % params['title']);
+
+    if params['show_total_citation']:
+        _, _, cite_str = get_totalcitations_hindex(params['googlescholarID'])
+        f1.write('%s\n\n' % cite_str)
 
     if params['show_count_number']:
         _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
@@ -892,6 +919,10 @@ def write_entries_by_year(bib_entries):
     if params['show_page_title']:
         f1.write('<h1>%s</h1>\n\n' % params['title']);
 
+    if params['show_total_citation']:
+        _, _, cite_str = get_totalcitations_hindex(params['googlescholarID'])
+        f1.write('%s\n\n' % cite_str)
+
     if params['show_count_number']:
         _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
         f1.write('%s\n\n' % count_str)
@@ -961,7 +992,7 @@ def main():
         #  print config.items(param_str)
 
         #  strings, lists, dicts
-        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', \
+        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'show_total_citation', \
                          'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted', \
                          'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', \
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding', \
