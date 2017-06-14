@@ -36,7 +36,11 @@ import datetime
 import codecs
 import textwrap
 
+from bs4 import BeautifulSoup
+from urllib import FancyURLopener
+
 import bibtexparser
+
 from docopt import docopt
 
 import ConfigParser
@@ -87,7 +91,11 @@ params['count_publisher'] = [
 
 params['show_citation_types'] = [u'article', u'inproceedings', u'phdthesis', u'inbook']
 
-params['show_citation'] = False
+#  'no', 'scholar.js' 'bs'
+params['show_citation'] = 'no'
+# obtained by googlescholarID by using bs
+params['dict_title'] = {}
+
 params['show_page_title'] = True
 
 #  params['googlescholarID'] = u"'BARqXQ0AAAAJ'"
@@ -134,7 +142,6 @@ params['bibtex_show_list'] = ['author', 'title', 'journal', 'booktitle', 'year',
 params['add_blank_line_after_item'] = False
 # customized bootstrap if provided
 params['bootstrap_css'] = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'
-
 
 
 # regular expression for \emph{...{...}*...}
@@ -227,6 +234,25 @@ def highlight_publisher(publisher):
                 return publisher
         else:
             return publisher
+
+
+def get_title_citation_url(scholarID):
+    '''get dictionary {title: [citations, url]} from a given googlescholar id'''
+
+    openurl = FancyURLopener().open
+    url = u'https://scholar.google.com/citations?user=%s&hl=en' % scholarID
+    url = url + u'&view_op=list_works&sortby=pubdate&cstart=0&pagesize=1000'
+    soup = BeautifulSoup(openurl(url).read(), "lxml")
+
+    title = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_at" })]
+    title_url = [u'https://scholar.google.com/%s' % i['href'] for i in soup.findAll("a", { "class" : "gsc_a_at" })]
+    citations = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_ac" })]
+
+    dict_out={}
+    for i, name in enumerate(title):
+        dict_out[name.lower()] = [citations[i] if citations[i]!=u'' else u'0', title_url[i]]
+
+    return dict_out
 
 
 def get_arxivID_from_entry(entry):
@@ -691,8 +717,9 @@ def get_entry_output(entry):
             out.append(']')
         out.append('&nbsp;')
 
-    bibid0 = entry['ID']
-    bibid = bibid0.replace(':', u'-')
+    bibid = entry['ID']
+    bibid = bibid.replace(':', u'-')
+    bibid = bibid.replace('.', u'-')
     show_abstract = params['show_abstract'] and entry.has_key('abstract') and entry['abstract']!=''
     show_bibtex = params['show_bibtex']
 
@@ -719,8 +746,14 @@ def get_entry_output(entry):
             out.append('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (params['target_link'], entry[i_str], i_str) )
 
     #  citation
-    if params['show_citation'] and entry['ENTRYTYPE'] in params['show_citation_types'] and int(entry['year']) <= params['show_citation_year']:
-        out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (entry['title'], params['target_link_citation']) )
+    if entry['ENTRYTYPE'] in params['show_citation_types'] and int(entry['year']) <= params['show_citation_year']:
+        if params['show_citation']=='scholar.js':
+            out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (entry['title'], params['target_link_citation']) )
+        elif params['show_citation']=='bs':
+            citations_url = params['dict_title'][entry['title'].lower()]
+            out.append('\n[citations: <a href="%s">%s</a>]&nbsp;' % (citations_url[1], citations_url[0]) )
+        else:
+            raise ValueError('wrong show_citation')
 
     #  note
     for i_str in params['bibtex_fields_note']:
@@ -928,7 +961,7 @@ def main():
         #  print config.items(param_str)
 
         #  strings, lists, dicts
-        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', \
+        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', \
                          'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted', \
                          'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', \
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding', \
@@ -937,7 +970,7 @@ def main():
                 params[name_str] = ast.literal_eval(config.get(param_str,name_str))
 
         #  booleans
-        for name_str in ['show_citation', 'use_icon', 'single_line', 'use_bootstrap_dialog', 'add_blank_line_after_item', 'show_page_title', 'show_count_number']:
+        for name_str in ['use_icon', 'single_line', 'use_bootstrap_dialog', 'add_blank_line_after_item', 'show_page_title', 'show_count_number']:
             if config.has_option(param_str, name_str):
                 params[name_str] = config.getboolean(param_str, name_str)
 
@@ -1030,7 +1063,7 @@ def main():
 
 
     # html afterlog
-    if params.has_key('googlescholarID'):
+    if params['show_citation']=='scholar.js' and params.has_key('googlescholarID'):
         afterlog = """
         <br>
             <script type="text/javascript">
@@ -1076,6 +1109,8 @@ def main():
         if is_entry_selected(e):
             entries_selected.append(e)
 
+    if params['show_citation']=='bs':
+        params['dict_title'] = get_title_citation_url(params['googlescholarID'])
 
     if params['show_paper_style']=='type':
         write_entries_by_type(entries_selected);
