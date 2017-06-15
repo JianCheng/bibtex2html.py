@@ -53,7 +53,6 @@ import codecs
 import textwrap
 
 from bs4 import BeautifulSoup
-#  from urllib import FancyURLopener
 
 import bibtexparser
 
@@ -177,7 +176,7 @@ def cmp_by_year(y, x):
     '''sort entry by year'''
 
     if x['year'].isdigit() and y['year'].isdigit():
-        return int(x['year']) - int(y['year'])
+        return int(x['year']) - int(y['year']) if int(x['year']) != int(y['year']) else cmp_by_type(y,x)
     elif x['year'].isdigit() and not y['year'].isdigit():
         return -1
     elif not x['year'].isdigit() and y['year'].isdigit():
