@@ -93,7 +93,7 @@ params['show_count_number'] = True
 params['count_publisher'] = [
     [u'Nature Methods'],
     [u'TMI', u'IEEE Transactions on Medical Imaging'],
-    [u'MIA', u'MedIA', u'Medical Image Analysis'],
+    [u'MedIA', u'MIA', u'Medical Image Analysis'],
     [u'TPAMI', u'IEEE Transactions on Pattern Analysis and Machine Intelligence'],
     [u'IJCV', u'International Journal of Computer Vision'],
     [u'NeuroImage'],
