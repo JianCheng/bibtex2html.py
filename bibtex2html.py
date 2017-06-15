@@ -251,7 +251,7 @@ def get_totalcitations_hindex(scholarID):
     citations = unicode(career[0].get_text())
     hindex = unicode(career[2].get_text())
 
-    str_out = '''<p><big>&#8226;&nbsp;<b>Total Citations</b>: <a href='%s'>%s</a> &#8226;&nbsp;  <b>H-Index</b>: <a href='%s'>%s</a></big></p>''' % (url0, citations, url0, hindex)
+    str_out = '''<p><big>&#8226;&nbsp;<b>Total Citations</b>: <a target="%s" href='%s'>%s</a> &#8226;&nbsp;  <b>H-Index</b>: <a target="%s" href='%s'>%s</a></big></p>''' % (params['target_link_citation'], url0, citations, params['target_link_citation'], url0, hindex)
 
     return citations, hindex, str_out
 
@@ -774,7 +774,7 @@ def get_entry_output(entry):
             out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (entry['title'], params['target_link_citation']) )
         elif params['show_citation']=='bs':
             citations_url = params['dict_title'][entry['title'].lower()]
-            out.append('\n[citations: <a href="%s">%s</a>]&nbsp;' % (citations_url[1], citations_url[0]) )
+            out.append('\n[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (params['target_link_citation'], citations_url[1], citations_url[0]) )
         else:
             raise ValueError('wrong show_citation')
 
