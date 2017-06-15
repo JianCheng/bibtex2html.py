@@ -23,7 +23,7 @@ bibtex2html.py papers.bib papers.html
 bibtex2html.py papers.bib papers.html -c papers_conf.ini
 bibtex2html.py papers.bib papers.html -c papers_conf.ini --outbib out.bib
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type'}"
-bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'bulleted_list':'ol_reversed'}"
+bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type_year', 'bulleted_list':'ol_reversed'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'css_file': 'style.css'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'selection_and': {'author': ['Jian Cheng'], 'year':[2010,2013] }}"
 
