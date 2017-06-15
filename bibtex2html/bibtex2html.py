@@ -30,6 +30,22 @@ bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style'
 Author(s): Jian Cheng (jian.cheng.1983@gmail.com)
 """
 
+from __future__ import print_function
+import sys
+
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
+if PY2:
+    from urllib import FancyURLopener
+    import ConfigParser as configparser
+else:
+    from urllib.request import FancyURLopener
+    import configparser
+    import functools
+
+    def unicode(ss):
+        return ss
 
 import re, os, io
 import datetime
@@ -37,13 +53,12 @@ import codecs
 import textwrap
 
 from bs4 import BeautifulSoup
-from urllib import FancyURLopener
+#  from urllib import FancyURLopener
 
 import bibtexparser
 
 from docopt import docopt
 
-import ConfigParser
 import ast
 
 
@@ -280,7 +295,7 @@ def get_arxivID_from_entry(entry):
     '''get arxiv id'''
 
     id = ''
-    if entry.has_key('journal'):
+    if 'journal' in entry:
         journal = entry['journal'].lower()
         words = journal.split()
         for w in words:
@@ -289,7 +304,7 @@ def get_arxivID_from_entry(entry):
                 id = w[pos+6:]
                 return id
 
-    elif entry.has_key('eprint'):
+    elif 'eprint' in entry:
         w = entry['eprint'].lower()
         pos = w.find('arxiv:')
         if pos>=0:
@@ -301,11 +316,11 @@ def get_arxivID_from_entry(entry):
 def get_pdflink_from_entry(entry):
     '''get pdf link from bib entry (keys: pdf, hal_id)'''
 
-    if entry.has_key('pdf') and entry['pdf']!='':
+    if 'pdf' in entry and entry['pdf']!='':
         return entry['pdf']
     elif get_arxivID_from_entry(entry)!='':
         return 'https://arxiv.org/pdf/%s.pdf' % get_arxivID_from_entry(entry)
-    elif entry.has_key('hal_id'):
+    elif 'hal_id' in entry:
         return 'https://hal.archives-ouvertes.fr/%s/document' % entry['hal_id']
     else:
         return ''
@@ -314,15 +329,15 @@ def get_pdflink_from_entry(entry):
 def get_wwwlink_from_entry(entry):
     '''get website link from bib entry (keys: url, www, doi, hal_id)'''
 
-    if entry.has_key('url') and entry['url']!='':
+    if 'url' in entry and entry['url']!='':
         return entry['url']
-    elif entry.has_key('www'):
+    elif 'www' in entry:
         return entry['www']
-    elif entry.has_key('doi'):
+    elif 'doi' in entry:
         return 'https://dx.doi.org/%s' % entry['doi']
     elif get_arxivID_from_entry(entry)!='':
         return 'https://arxiv.org/abs/%s' % get_arxivID_from_entry(entry)
-    elif entry.has_key('hal_id'):
+    elif 'hal_id' in entry:
         return 'https://hal.archives-ouvertes.fr/%s' % entry['hal_id']
     else:
         return ''
@@ -331,9 +346,9 @@ def get_wwwlink_from_entry(entry):
 def get_journal_from_entry(entry):
     '''get journal from entry (keys: journal, eprint)'''
 
-    if entry.has_key('journal') and entry['journal']!='':
+    if 'journal' in entry and entry['journal']!='':
         return entry['journal']
-    elif entry.has_key('eprint'):
+    elif 'eprint' in entry:
         return entry['eprint']
     else:
         return ''
@@ -343,19 +358,19 @@ def add_empty_fields_in_entry(entry):
     '''add some fields using other fields'''
 
     #  add pdf_link from other keys
-    if not entry.has_key('pdf') or entry['pdf']=='':
+    if not 'pdf' in entry or entry['pdf']=='':
         pdf_link = get_pdflink_from_entry(entry)
         if pdf_link!='':
             entry['pdf'] = pdf_link
 
     #  add url from other keys
-    if not entry.has_key('url') or entry['url']=='':
+    if not 'url' in entry or entry['url']=='':
         www_link = get_wwwlink_from_entry(entry)
         if www_link!='':
             entry['url'] = www_link
 
     #  add journal from other keys
-    if not entry.has_key('journal') or entry['journal']=='':
+    if not 'journal' in entry or entry['journal']=='':
         journal = get_journal_from_entry(entry)
         if journal!='':
             entry['journal'] = journal
@@ -393,9 +408,9 @@ def get_publisher_shortname_from_entry(entry):
     '''Get shortname for journals or conferences from an entry'''
 
     pub = ''
-    if entry.has_key('journal'):
+    if 'journal' in entry:
         pub = entry['journal']
-    elif entry.has_key('booktitle'):
+    elif 'booktitle' in entry:
         pub = entry['booktitle']
 
     dem_1 = pub.find('(')
@@ -472,14 +487,14 @@ def is_entry_selected_by_key(entry, k, v):
         author_names = entry['author'].split(', ')
         if author_names[0] in v:
             return True
-        elif entry.has_key(k):
+        elif k in entry:
             authorFirst_names = entry[k].split(', ')
             for name in authorFirst_names:
                 if name in v:
                     return True
         return False
     elif k =='author_corresponding':
-        if not entry.has_key(k):
+        if not k in entry:
             return False
         else:
             authorCorr_names = entry[k].split(', ')
@@ -639,7 +654,7 @@ def get_entry_output(entry):
     out=['\n<li>\n']
 
     # --- author ---
-    if entry.has_key('author'):
+    if 'author' in entry:
         out.append('<span class="author">%s</span>,' % highlight_author(entry['author']))
         if not params['single_line']:
             out.append('<br>')
@@ -648,7 +663,7 @@ def get_entry_output(entry):
 
     # --- chapter ---
     chapter = False
-    if entry.has_key('chapter'):
+    if 'chapter' in entry:
         chapter = True
         out.append('<span class="title">"%s"</span>,' % entry['chapter'])
         if not params['single_line']:
@@ -670,16 +685,16 @@ def get_entry_output(entry):
     out.append('\n')
 
     # --- journal or similar ---
-    if entry.has_key('journal'):
+    if 'journal' in entry:
         out.append('<span class="publisher">%s</span>' % highlight_publisher(entry['journal']))
-    elif entry.has_key('booktitle'):
+    elif 'booktitle' in entry:
         out.append('<span class="publisher">')
         if entry['ENTRYTYPE'] in params['type_conference_paper']:
             out.append(highlight_publisher(entry['booktitle']))
         else:
             out.append(entry['booktitle'])
         out.append('</span>')
-    elif entry.has_key('eprint'):
+    elif 'eprint' in entry:
         out.append('<span class="publisher">%s</span>' % highlight_publisher(entry['eprint']))
     elif entry['ENTRYTYPE'] == 'phdthesis':
         out.append('PhD thesis, %s' % entry['school'])
@@ -688,16 +703,16 @@ def get_entry_output(entry):
 
     # --- volume, pages, notes etc ---
     #  print(entry)
-    if entry.has_key('volume'):
+    if 'volume' in entry:
         out.append(', Vol. %s' % entry['volume'])
-    if entry.has_key('number') and entry['ENTRYTYPE']!='techreport':
+    if 'number' in entry and entry['ENTRYTYPE']!='techreport':
         out.append(', No. %s' % entry['number'])
-    if entry.has_key('pages'):
+    if 'pages' in entry:
         out.append(', p.%s' % entry['pages'])
-    #  elif entry.has_key('note'):
+    #  elif 'note' in entry:
     #      if journal or chapter: out.append(', ')
     #      out.append(entry['note'])
-    if entry.has_key('month'):
+    if 'month' in entry:
         out.append(', %s' % entry['month'])
 
     # --- year ---
@@ -741,7 +756,7 @@ def get_entry_output(entry):
     bibid = entry['ID']
     bibid = bibid.replace(':', u'-')
     bibid = bibid.replace('.', u'-')
-    show_abstract = params['show_abstract'] and entry.has_key('abstract') and entry['abstract']!=''
+    show_abstract = params['show_abstract'] and 'abstract' in entry and entry['abstract']!=''
     show_bibtex = params['show_bibtex']
 
     # bibtex
@@ -762,7 +777,7 @@ def get_entry_output(entry):
 
     #  download fields
     for i_str in params['bibtex_fields_download']:
-        if entry.has_key(i_str) and entry[i_str]!='':
+        if i_str in entry and entry[i_str]!='':
             out.append('\n')
             out.append('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (params['target_link'], entry[i_str], i_str) )
 
@@ -780,7 +795,7 @@ def get_entry_output(entry):
 
     #  note
     for i_str in params['bibtex_fields_note']:
-        if entry.has_key(i_str) and entry[i_str]!='':
+        if i_str in entry and entry[i_str]!='':
             out.append('\n(<span class="%s">%s</span>)&nbsp;' % (i_str if i_str!='note' else 'hlnote0', entry[i_str]))
 
     out.append('\n')
@@ -887,7 +902,10 @@ def write_entries_by_type(bib_entries):
         if papers:
             f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name(sec), sec));
             f1.write('\n%s\n' % ol_1)
-            papers = sorted(papers, cmp=cmp_by_year)
+            if PY2:
+                papers = sorted(papers, cmp=cmp_by_year)
+            else:
+                papers = sorted(papers, key=functools.cmp_to_key(cmp_by_year))
             for e in papers:
                 f1.write(get_entry_output(e))
             f1.write('\n%s\n\n\n' % ol_2)
@@ -903,7 +921,7 @@ def write_entries_by_year(bib_entries):
 
     year_entries_dict = {}
     for e in bib_entries:
-        if year_entries_dict.has_key(e['year']):
+        if e['year'] in year_entries_dict:
             year_entries_dict[e['year']].append(e)
         else:
             year_entries_dict[e['year']]=[e]
@@ -943,7 +961,10 @@ def write_entries_by_year(bib_entries):
             f1.write('\n<h2><a name="year%s"></a>%s</h2>\n' % (y,y));
             f1.write('\n%s\n' % ol_1)
             papers = year_entries_dict[y]
-            papers = sorted(papers, cmp=cmp_by_type)
+            if PY2:
+                papers = sorted(papers, cmp=cmp_by_year)
+            else:
+                papers = sorted(papers, key=functools.cmp_to_key(cmp_by_year))
             for e in papers:
                 f1.write(get_entry_output(e))
             f1.write('\n%s\n\n\n' % ol_2)
@@ -985,7 +1006,7 @@ def main():
     params['verbose'] = _verbose
 
 
-    config = ConfigParser.SafeConfigParser()
+    config = configparser.SafeConfigParser()
     if args['--conf']:
         param_str = 'params'
         config.read(_conffile)
@@ -1094,7 +1115,7 @@ def main():
 
 
     # html afterlog
-    if params['show_citation']=='scholar.js' and params.has_key('googlescholarID'):
+    if params['show_citation']=='scholar.js' and 'googlescholarID' in params:
         afterlog = """
         <br>
             <script type="text/javascript">
@@ -1126,7 +1147,7 @@ def main():
     entries_selected=[]
     for e in bib_entries:
         if _verbose>=2:
-            print 'e before clean=', e
+            print ('e before clean=', e)
 
         #  clean entry for output
         clean_entry(e)
@@ -1135,7 +1156,7 @@ def main():
         add_empty_fields_in_entry(e)
 
         if _verbose>=2:
-            print 'e after clean =', e
+            print ('e after clean =', e)
 
         if is_entry_selected(e):
             entries_selected.append(e)
