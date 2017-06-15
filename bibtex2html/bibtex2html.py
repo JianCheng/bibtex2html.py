@@ -961,9 +961,9 @@ def write_entries_by_year(bib_entries):
             f1.write('\n%s\n' % ol_1)
             papers = year_entries_dict[y]
             if PY2:
-                papers = sorted(papers, cmp=cmp_by_year)
+                papers = sorted(papers, cmp=cmp_by_type)
             else:
-                papers = sorted(papers, key=functools.cmp_to_key(cmp_by_year))
+                papers = sorted(papers, key=functools.cmp_to_key(cmp_by_type))
             for e in papers:
                 f1.write(get_entry_output(e))
             f1.write('\n%s\n\n\n' % ol_2)
