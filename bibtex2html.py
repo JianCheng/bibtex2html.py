@@ -133,7 +133,7 @@ params['type_conference_paper'] = [u'inproceedings']
 params['type_conference_abstract'] = [u'conference']
 
 # bibtex download fields
-params['bibtex_fields_download'] = ['project', 'slides', 'poster', 'video', 'code', 'software', 'data', 'media']
+params['bibtex_fields_download'] = ['arxiv', 'project', 'slides', 'poster', 'video', 'code', 'software', 'data', 'media']
 # bibtex note fields
 params['bibtex_fields_note'] = ['note', 'hlnote', 'hlnote2']
 # show bibtex with given fields
