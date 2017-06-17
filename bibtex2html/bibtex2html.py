@@ -172,17 +172,44 @@ def remove_empty_lines(strIn):
     return os.linesep.join([s for s in strIn.splitlines() if s.strip()])
 
 
-def cmp_by_year(y, x):
-    '''sort entry by year'''
+def is_author_selected(entry, names, select_field=''):
+    '''Return true if the author list of the entry is selected.
 
-    if x['year'].isdigit() and y['year'].isdigit():
-        return int(x['year']) - int(y['year']) if int(x['year']) != int(y['year']) else cmp_by_type(y,x)
-    elif x['year'].isdigit() and not y['year'].isdigit():
-        return -1
-    elif not x['year'].isdigit() and y['year'].isdigit():
-        return 1
+    Parameters
+    ----------
+        entry        :   bibtex entry
+        names        :   selected author names
+        select_field :   'first': first author;  'corresponding': corresponding author; '': first or corresponding author
+
+    Returns
+    -------
+        is_selected : boolean
+    '''
+
+    author_names = entry['author'].split(', ')
+    k = 'author_' + select_field
+    if select_field=='first':
+        if author_names[0] in names:
+            return True
+        elif k in entry:
+            authorFirst_names = entry[k].split(', ')
+            for name in authorFirst_names:
+                if name in names:
+                    return True
+        return False
+    elif select_field=='corresponding':
+        if not k in entry:
+            return False
+        else:
+            authorCorr_names = entry[k].split(', ')
+            for name in authorCorr_names:
+                if name in names:
+                    return True
+        return False
+    elif select_field=='':
+        return is_author_selected(entry, names, 'first') or is_author_selected(entry, names, 'corresponding')
     else:
-        return 1
+        raise ValueError("Wrong select_field ('first', 'corresponding', or '')!")
 
 
 def cmp_by_type(y, x):
@@ -194,28 +221,47 @@ def cmp_by_type(y, x):
         if y['ENTRYTYPE']=='article' and x['ENTRYTYPE'] not in ['phdthesis', 'book', 'inbook']: return -1
         if y['ENTRYTYPE']=='inproceedings' and x['ENTRYTYPE'] not in ['phdthesis', 'book', 'inbook', 'article']: return -1
         if y['ENTRYTYPE']=='conferences' and x['ENTRYTYPE'] not in ['phdthesis', 'book', 'inbook', 'article', 'inproceedings']: return -1
-    elif x['ENTRYTYPE']=='article':
-        x_hl = False
-        y_hl = False
-        for word in params['journal_shortname_highlighted']:
-            if x['journal'].find('(%s)' % word)>=0: x_hl=True
-            if y['journal'].find('(%s)' % word)>=0: y_hl=True
-        for word in params['journal_fullname_highlighted_lower']:
-            if not x_hl and x['journal'].find(word)>=0: x_hl=True
-            if not y_hl and y['journal'].find(word)>=0: y_hl=True
-        if x_hl and not y_hl:  return 1
-        if not x_hl and y_hl:  return -1
-    elif x['ENTRYTYPE'] in params['type_conference_paper']:
-        x_hl = False
-        y_hl = False
-        for word in params['conference_shortname_highlighted']:
-            if x['booktitle'].find(word+"'")>=0: x_hl=True
-            if y['booktitle'].find(word+"'")>=0: y_hl=True
-        #  print x['booktitle'], y['booktitle'], x_hl, y_hl
-        if x_hl and not y_hl:  return 1
-        if not x_hl and y_hl:  return -1
+        return 1
+    else:
+        if x['ENTRYTYPE']=='article':
+            x_hl, y_hl = False, False
+            for word in params['journal_shortname_highlighted']:
+                if x['journal'].find('(%s)' % word)>=0: x_hl=True
+                if y['journal'].find('(%s)' % word)>=0: y_hl=True
+            for word in params['journal_fullname_highlighted_lower']:
+                if not x_hl and x['journal'].lower().find(word)>=0: x_hl=True
+                if not y_hl and y['journal'].lower().find(word)>=0: y_hl=True
+            if x_hl and not y_hl:  return 1
+            if not x_hl and y_hl:  return -1
+        elif x['ENTRYTYPE'] in params['type_conference_paper']:
+            x_hl, y_hl = False, False
+            for word in params['conference_shortname_highlighted']:
+                if x['booktitle'].find(word+"'")>=0: x_hl=True
+                if y['booktitle'].find(word+"'")>=0: y_hl=True
+            if x_hl and not y_hl:  return 1
+            if not x_hl and y_hl:  return -1
 
-    return 1
+        #  same type, both types are highlighted or not highlighted
+        if len(params['author_names_highlighted']):
+            x_hl = is_author_selected(x, params['author_names_highlighted'])
+            y_hl = is_author_selected(y, params['author_names_highlighted'])
+            if x_hl and not y_hl:  return 1
+            if not x_hl and y_hl:  return -1
+
+        return 1
+
+
+def cmp_by_year(y, x):
+    '''sort entry by year'''
+
+    if x['year'].isdigit() and y['year'].isdigit():
+        return int(x['year']) - int(y['year']) if int(x['year']) != int(y['year']) else cmp_by_type(y,x)
+    elif x['year'].isdigit() and not y['year'].isdigit():
+        return -1
+    elif not x['year'].isdigit() and y['year'].isdigit():
+        return 1
+    else:
+        return 1
 
 
 def highlight_author(author):
@@ -483,24 +529,9 @@ def is_entry_selected_by_key(entry, k, v):
                 return True
         return False
     elif k=='author_first':
-        author_names = entry['author'].split(', ')
-        if author_names[0] in v:
-            return True
-        elif k in entry:
-            authorFirst_names = entry[k].split(', ')
-            for name in authorFirst_names:
-                if name in v:
-                    return True
-        return False
+        return is_author_selected(entry, v, 'first')
     elif k =='author_corresponding':
-        if not k in entry:
-            return False
-        else:
-            authorCorr_names = entry[k].split(', ')
-            for name in authorCorr_names:
-                if name in v:
-                    return True
-        return False
+        return is_author_selected(entry, v, 'corresponding')
     else:
         raise ValueError('Wrong selection keys!')
 
