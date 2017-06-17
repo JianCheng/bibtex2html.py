@@ -154,6 +154,10 @@ params['bibtex_fields_note'] = ['note', 'hlnote', 'hlnote2']
 params['bibtex_show_list'] = ['author', 'title', 'journal', 'booktitle', 'year', 'volume', 'number', 'pages', 'month', 'publisher', 'organization', 'school', 'address', 'edition',
                               'editor', 'institution', 'chapter', 'series', 'pdf', 'doi', 'url', 'hal_id', 'eprint', 'archiveprefix', 'primaryclass']
 
+# print signs for first authors, corresponding authors.
+params['show_author_sign'] = False
+params['author_sign'] = {'author_first': '#', 'author_corresponding': '*'}
+
 # add <br> after each item
 params['add_blank_line_after_item'] = False
 # customized bootstrap if provided
@@ -264,16 +268,27 @@ def cmp_by_year(y, x):
         return 1
 
 
-def highlight_author(author):
+def highlight_author(entry):
     """return a string with highlighted author"""
 
-    authors = author.split(', ')
+    authors = entry['author'].split(', ')
+
     authors_new = []
     for p in authors:
         if p in params['author_names_highlighted']:
             authors_new.append('<b>%s</b>' % p);
         else:
             authors_new.append(p);
+
+    if params['show_author_sign']:
+        authorFirst_names = entry['author_first'].split(', ') if 'author_first' in entry else []
+        authorCorr_names = entry['author_corresponding'].split(', ') if 'author_corresponding' in entry else []
+        for i, name in enumerate(authors):
+            if name in authorFirst_names:
+                authors_new[i] = authors_new[i] + params['author_sign']['author_first']
+            if name in authorCorr_names:
+                authors_new[i] = authors_new[i] + params['author_sign']['author_corresponding']
+
     return ', '.join(authors_new)
 
 
@@ -685,7 +700,7 @@ def get_entry_output(entry):
 
     # --- author ---
     if 'author' in entry:
-        out.append('<span class="author">%s</span>,' % highlight_author(entry['author']))
+        out.append('<span class="author">%s</span>,' % highlight_author(entry))
         if not params['single_line']:
             out.append('<br>')
 
@@ -1043,7 +1058,7 @@ def main():
         #  print config.items(param_str)
 
         #  strings, lists, dicts
-        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'show_total_citation', \
+        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'author_sign', \
                          'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted', \
                          'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', \
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding', \
@@ -1052,7 +1067,7 @@ def main():
                 params[name_str] = ast.literal_eval(config.get(param_str,name_str))
 
         #  booleans
-        for name_str in ['use_icon', 'single_line', 'use_bootstrap_dialog', 'add_blank_line_after_item', 'show_page_title', 'show_count_number']:
+        for name_str in ['use_icon', 'single_line', 'use_bootstrap_dialog', 'add_blank_line_after_item', 'show_page_title', 'show_count_number', 'show_total_citation', 'show_author_sign']:
             if config.has_option(param_str, name_str):
                 params[name_str] = config.getboolean(param_str, name_str)
 
