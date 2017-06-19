@@ -283,11 +283,12 @@ def highlight_author(entry):
     if params['show_author_sign']:
         authorFirst_names = entry['author_first'].split(', ') if 'author_first' in entry else []
         authorCorr_names = entry['author_corresponding'].split(', ') if 'author_corresponding' in entry else []
-        for i, name in enumerate(authors):
-            if name in authorFirst_names:
-                authors_new[i] = authors_new[i] + params['author_sign']['author_first']
-            if name in authorCorr_names:
-                authors_new[i] = authors_new[i] + params['author_sign']['author_corresponding']
+        if len(authorFirst_names) or len(authorCorr_names):
+            for i, name in enumerate(authors):
+                if name in authorFirst_names:
+                    authors_new[i] = authors_new[i] + params['author_sign']['author_first']
+                if name in authorCorr_names:
+                    authors_new[i] = authors_new[i] + params['author_sign']['author_corresponding']
 
     return ', '.join(authors_new)
 
