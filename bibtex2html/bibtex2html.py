@@ -750,11 +750,11 @@ def get_entry_output(entry):
     # --- volume, pages, notes etc ---
     #  print(entry)
     if 'volume' in entry:
-        out.append(', Vol. %s' % entry['volume'])
+        out.append(', vol. %s' % entry['volume'])
     if 'number' in entry and entry['ENTRYTYPE']!='techreport':
-        out.append(', No. %s' % entry['number'])
+        out.append(', no. %s' % entry['number'])
     if 'pages' in entry:
-        out.append(', p.%s' % entry['pages'])
+        out.append(', pp. %s' % entry['pages'])
     #  elif 'note' in entry:
     #      if journal or chapter: out.append(', ')
     #      out.append(entry['note'])
