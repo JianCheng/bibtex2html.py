@@ -115,6 +115,7 @@ params['dict_title'] = {}
 params['show_page_title'] = True
 
 #  params['googlescholarID'] = u"'BARqXQ0AAAAJ'"
+params['googlescholarID'] = u''
 params['show_citation_before_years'] = 1
 #  params['scholar.js'] = 'scholar.js'
 params['scholar.js'] = 'http://kha.li/dist/scholar/scholar-0.1.1.min.js'
@@ -335,6 +336,9 @@ def get_totalcitations_hindex(scholarID):
 
 def get_title_citation_url(scholarID):
     '''get dictionary {title: [citations, url]} from a given googlescholar id'''
+
+    if scholarID==None or scholarID==u'':
+        raise ValueError("no googlescholarID")
 
     openurl = FancyURLopener().open
     url0 = u'https://scholar.google.com/citations?user=%s&hl=en' % scholarID
@@ -834,7 +838,7 @@ def get_entry_output(entry):
         elif params['show_citation']=='scholar.js':
             out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (entry['title'], params['target_link_citation']) )
         elif params['show_citation']=='bs':
-            citations_url = params['dict_title'][entry['title'].lower()]
+            citations_url = params['dict_title'][entry['title'].lower()] if entry['title'].lower() in params['dict_title'] else ['not found', u'https://scholar.google.com/citations?user=%s&hl=en' % params['googlescholarID']]
             out.append('\n[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (params['target_link_citation'], citations_url[1], citations_url[0]) )
         else:
             raise ValueError('wrong show_citation')
