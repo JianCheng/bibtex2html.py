@@ -360,7 +360,14 @@ def get_arxivID_from_entry(entry):
     '''get arxiv id'''
 
     id = ''
-    if 'journal' in entry:
+    if 'eprint' in entry or 'arxiv' in entry:
+        word = 'eprint' if 'eprint' in entry else 'arxiv'
+        w = entry[word].lower()
+        pos = w.find('arxiv:')
+        if pos>=0:
+            id = w[pos+6:]
+
+    elif 'journal' in entry:
         journal = entry['journal'].lower()
         words = journal.split()
         for w in words:
@@ -369,13 +376,13 @@ def get_arxivID_from_entry(entry):
                 id = w[pos+6:]
                 return id
 
-    elif 'eprint' in entry:
-        w = entry['eprint'].lower()
-        pos = w.find('arxiv:')
-        if pos>=0:
-            id = w[pos+6:]
-
     return id
+
+
+def get_arxivlink_from_entry(entry):
+    '''get arxiv link'''
+
+    return 'https://arxiv.org/abs/%s' % get_arxivID_from_entry(entry)
 
 
 def get_pdflink_from_entry(entry):
@@ -829,7 +836,7 @@ def get_entry_output(entry):
     for i_str in params['bibtex_fields_download']:
         if i_str in entry and entry[i_str]!='':
             out.append('\n')
-            out.append('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (params['target_link'], entry[i_str], i_str) )
+            out.append('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (params['target_link'], entry[i_str] if i_str!='arxiv' else get_arxivlink_from_entry(entry), i_str) )
 
     #  citation
     if entry['ENTRYTYPE'] in params['show_citation_types'] and int(entry['year']) <= params['show_citation_year']:
@@ -913,8 +920,7 @@ def write_entries_by_type(bib_entries):
     # Iterate over the entries
     for e in bib_entries:
 
-        arxiv_id = get_arxivID_from_entry(e)
-        if arxiv_id!='':
+        if 'eprint' in e:
             preprintlist.append(e)
         elif (e['ENTRYTYPE']=="book"):
             booklist.append(e)
