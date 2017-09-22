@@ -110,7 +110,8 @@ params['show_citation'] = 'no'
 # show total citation by googlescholarID using bs
 params['show_total_citation'] = False
 # obtained by googlescholarID by using bs
-params['dict_title'] = {}
+params['dict_title'] = {} # dict of papers:  {title: [citations, url]}
+params['google_scholar_out'] = ()
 
 params['show_page_title'] = True
 
@@ -315,27 +316,8 @@ def highlight_publisher(publisher):
             return publisher
 
 
-def get_totalcitations_hindex(scholarID):
-    '''get citations and h-index from googlescholar id'''
-
-    openurl = FancyURLopener().open
-    url0 = u'https://scholar.google.com/citations?user=%s&hl=en' % scholarID
-    url = url0 + u'&view_op=list_works&sortby=pubdate&cstart=0&pagesize=1000'
-    soup = BeautifulSoup(openurl(url).read(), "lxml")
-
-    career = soup.findAll("td", { "class" : "gsc_rsb_std" }, text=True)
-
-    citations = unicode(career[0].get_text())
-    hindex = unicode(career[2].get_text())
-
-    str_out = '''<p><big>&#8226;&nbsp;<b>Total Citations</b>: <a target="%s" href='%s'>%s</a> &#8226;&nbsp;  <b>H-Index</b>: <a target="%s" href='%s'>%s</a></big></p>''' % (params['target_link_citation'], url0, citations, params['target_link_citation'], url0, hindex)
-
-    return citations, hindex, str_out
-
-
-
 def get_title_citation_url(scholarID):
-    '''get dictionary {title: [citations, url]} from a given googlescholar id'''
+    '''get a dictionary {title: [citations, url]}, total citations, h-index from a given googlescholar id'''
 
     if scholarID==None or scholarID==u'':
         raise ValueError("no googlescholarID")
@@ -345,6 +327,7 @@ def get_title_citation_url(scholarID):
     url = url0 + u'&view_op=list_works&sortby=pubdate&cstart=0&pagesize=1000'
     soup = BeautifulSoup(openurl(url).read(), "lxml")
 
+    #  title: [citations, url]
     title = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_at" })]
     title_url = [u'https://scholar.google.com/%s' % i['href'] for i in soup.findAll("a", { "class" : "gsc_a_at" })]
     citations = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_ac" })]
@@ -353,7 +336,14 @@ def get_title_citation_url(scholarID):
     for i, name in enumerate(title):
         dict_out[name.lower()] = [citations[i] if citations[i]!=u'' else u'0', title_url[i]]
 
-    return dict_out
+    #  (total_citations, h-index, str_out)
+    career = soup.findAll("td", { "class" : "gsc_rsb_std" }, text=True)
+    citations = unicode(career[0].get_text())
+    hindex = unicode(career[2].get_text())
+
+    str_out = '''<p><big>&#8226;&nbsp;<b>Total Citations</b>: <a target="%s" href='%s'>%s</a> &#8226;&nbsp;  <b>H-Index</b>: <a target="%s" href='%s'>%s</a></big></p>''' % (params['target_link_citation'], url0, citations, params['target_link_citation'], url0, hindex)
+
+    return dict_out, citations, hindex, str_out
 
 
 def get_arxivID_from_entry(entry):
@@ -899,8 +889,7 @@ def write_entries_by_type(bib_entries):
         f1.write('<h1>%s</h1>\n\n' % params['title']);
 
     if params['show_total_citation']:
-        _, _, cite_str = get_totalcitations_hindex(params['googlescholarID'])
-        f1.write('%s\n\n' % cite_str)
+        f1.write('%s\n\n' % params['google_scholar_out'][2])
 
     if params['show_count_number']:
         _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
@@ -994,8 +983,7 @@ def write_entries_by_year(bib_entries):
         f1.write('<h1>%s</h1>\n\n' % params['title']);
 
     if params['show_total_citation']:
-        _, _, cite_str = get_totalcitations_hindex(params['googlescholarID'])
-        f1.write('%s\n\n' % cite_str)
+        f1.write('%s\n\n' % params['google_scholar_out'][2])
 
     if params['show_count_number']:
         _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
@@ -1218,7 +1206,12 @@ def main():
             entries_selected.append(e)
 
     if params['show_citation']=='bs':
-        params['dict_title'] = get_title_citation_url(params['googlescholarID'])
+        out_scholar = get_title_citation_url(params['googlescholarID'])
+        params['dict_title'] = out_scholar[0]
+        params['google_scholar_out'] = out_scholar[1:]
+
+    if params['show_citation']!='bs' and params['show_total_citation']:
+        raise ValueError("show_total_citation==True needs show_citation=='bs'")
 
     if params['show_paper_style']=='type':
         write_entries_by_type(entries_selected);
