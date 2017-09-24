@@ -329,7 +329,7 @@ def get_title_citation_url(scholarID):
 
     #  title: [citations, url]
     title = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_at" })]
-    title_url = [u'https://scholar.google.com/%s' % i['href'] for i in soup.findAll("a", { "class" : "gsc_a_at" })]
+    title_url = [u'https://scholar.google.com/%s' % i['data-href'] for i in soup.findAll("a", { "class" : "gsc_a_at" })]
     citations = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_ac" })]
 
     dict_out={}
