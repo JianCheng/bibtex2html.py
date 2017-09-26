@@ -119,7 +119,7 @@ params['show_page_title'] = True
 params['googlescholarID'] = u''
 params['show_citation_before_years'] = 1
 #  params['scholar.js'] = 'scholar.js'
-params['scholar.js'] = 'http://kha.li/dist/scholar/scholar-0.1.1.min.js'
+params['scholar.js'] = 'https://kha.li/dist/scholar/scholar-0.1.1.min.js'
 
 params['use_icon'] = False
 #  params['icon_path'] = u'.'
@@ -1118,12 +1118,12 @@ def main():
     # modify according to your needs
     prelog = """<!DOCTYPE HTML
         PUBLIC "-//W3C//DTD HTML 4.01//EN"
-        "http://www.w3.org/TR/html4/strict.dtd">
+        "https://www.w3.org/TR/html4/strict.dtd">
     <head>
     <meta http-equiv=Content-Type content="text/html; charset=%s">
     <title>%s</title>
 
-    <script type="text/javascript" src="http://code.jquery.com/jquery-2.2.0.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
     <link rel="stylesheet" href="%s">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="%s"></script>
