@@ -11,6 +11,23 @@ It also can show corresponding google scholar citations related with bibtex entr
 Dependencies can be satisfied by running `pip install -r requirements.txt`
 
 
+## Install 
+
+* Use `pip`:
+
+```
+sudo pip install bibtex2html.py
+```
+
+* Or download latest codes from github
+
+```
+git clone https://github.com/JianCheng/bibtex2html.py
+cd  bibtex2html.py
+pip install -r requirements.txt
+```
+
+
 ## Examples
 
 * Generate paper lists by type and by year using a configuration file. It requires access to google scholar.

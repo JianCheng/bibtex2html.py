@@ -13,7 +13,7 @@ from setuptools import find_packages, setup, Command
 
 # Package meta-data.
 NAME = 'bibtex2html.py'
-DESCRIPTION = 'bibtex to html.'
+DESCRIPTION = 'Convert bibtex to html.'
 URL = 'https://github.com/JianCheng/bibtex2html.py'
 EMAIL = 'jian.cheng.1983@gmail.com'
 AUTHOR = 'Jian Cheng'
