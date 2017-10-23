@@ -125,6 +125,7 @@ params['use_icon'] = False
 #  params['icon_path'] = u'.'
 params['icon_pdf'] = ''
 params['icon_www'] = ''
+params['icon_size'] = '16px'
 
 #  open link in a new tab
 #  params['target_link'] = u'_blank'
@@ -780,7 +781,7 @@ def get_entry_output(entry):
     pdf_link = get_pdflink_from_entry(entry)
     if pdf_link!='':
         if params['use_icon'] and params['icon_pdf']:
-            out.append('<a target="%s" href="%s"><img align="middle" border="0" src="%s" alt="[pdf]"></a>' % (params['target_link'], pdf_link, params['icon_pdf']))
+            out.append('<a target="%s" href="%s"><img src="%s" alt="[pdf]" style="width: %s; height: %s;"></a>' % (params['target_link'], pdf_link, params['icon_pdf'], params['icon_size'], params['icon_size']))
         else:
             out.append('[<a target="%s" href="%s">pdf</a>]' % (params['target_link'], pdf_link))
         out.append('&nbsp;')
@@ -793,7 +794,7 @@ def get_entry_output(entry):
             out.append('[')
         out.append('<a target="%s" href="%s">' % (params['target_link'], href_link))
         if params['use_icon'] and params['icon_www']:
-            out.append('<img align="middle" border="0" src="%s" alt="[www]"></a>' % (params['icon_www']))
+            out.append('<img src="%s" alt="[www]" style="width: %s; height: %s;"></a>' % (params['icon_www'], params['icon_size'], params['icon_size']))
         else:
             out.append('link</a>')
         if not params['use_icon']:
@@ -1059,7 +1060,7 @@ def main():
         #  strings, lists, dicts
         for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'author_sign', \
                          'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted', \
-                         'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', \
+                         'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', 'icon_size', \
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding', \
                          'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css', 'count_publisher', 'selection_and', 'selection_or', 'bulleted_list']:
             if config.has_option(param_str, name_str):
