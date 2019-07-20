@@ -135,7 +135,7 @@ params['target_link_citation'] = u'_blank'
 
 
 #  If false, show multiple lines
-params['single_line'] = False
+params['single_line'] = True
 
 #  Use ordered list if 'ol', unordered list if 'ul'
 params['bulleted_list'] = 'ol'
