@@ -27,3 +27,8 @@ li {margin-top: 0px; margin-bottom: 16px}
   border: 1px #ccc solid;
 }
 
+table {
+    border-collapse: separate;
+    border-spacing: 14px;
+    font-size: 18px;
+}

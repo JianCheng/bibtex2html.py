@@ -48,6 +48,7 @@ else:
         return ss
 
 import re, os, io
+import shutil
 import datetime
 import codecs
 import textwrap
@@ -104,6 +105,8 @@ params['count_publisher'] = [
 ]
 
 params['show_citation_types'] = [u'article', u'inproceedings', u'phdthesis', u'inbook']
+
+params['author_group'] = {}
 
 #  'no', 'scholar.js' 'bs'
 params['show_citation'] = 'no'
@@ -271,17 +274,29 @@ def cmp_by_year(y, x):
         return 1
 
 
-def highlight_author(entry):
+def highlight_author(entry, out_path=''):
     """return a string with highlighted author"""
 
     authors = entry['author'].split(', ')
 
     authors_new = []
     for p in authors:
-        if p in params['author_names_highlighted']:
-            authors_new.append('<b>%s</b>' % p);
+        if len(params['author_group']):
+            if p in params['author_group'].keys():
+                author_split = p.rsplit(' ', 1)
+                if len(author_split)!=2:
+                    raise ValueError('author_split should have 2 elements for first and last name')
+                # last-first.html
+                author_file = os.path.join(params['author_group_Author'], author_split[1] + '-' + author_split[0].replace(' ', '-')+'.html')
+                author_file = os.path.relpath(author_file, os.path.dirname(out_path))
+                authors_new.append('<a target="%s" href="%s"><b>%s</b></a>' % (params['target_link'], author_file, p));
+            else:
+                authors_new.append(p);
         else:
-            authors_new.append(p);
+            if p in params['author_names_highlighted']:
+                authors_new.append('<b>%s</b>' % p);
+            else:
+                authors_new.append(p);
 
     if params['show_author_sign']:
         authorFirst_names = entry['author_first'].split(', ') if 'author_first' in entry else []
@@ -626,6 +641,93 @@ def get_bulleted_list_str():
         raise ValueError("Wrong params['bulleted_list']. Must be 'ol', 'ul', 'ol_reversed'")
 
 
+def get_html_prelog(out_path=''):
+    '''get prelog in html.'''
+
+    css_file = os.path.relpath(params['css_file'], os.path.dirname(out_path))
+
+    # html prelog
+    # modify according to your needs
+    prelog = """<!DOCTYPE HTML
+        PUBLIC "-//W3C//DTD HTML 4.01//EN"
+        "https://www.w3.org/TR/html4/strict.dtd">
+    <head>
+    <meta http-equiv=Content-Type content="text/html; charset=%s">
+    <title>%s</title>
+
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+    <link rel="stylesheet" href="%s">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="%s"></script>
+
+
+    <script type="text/javascript">
+        function toggle(showHideDiv, switchTextDiv)
+        {
+        var ele = document.getElementById(showHideDiv);
+        var text = document.getElementById(switchTextDiv);
+        if(ele.style.display == "block")
+        {
+            ele.style.display = "none";
+        }
+        else
+        {
+            ele.style.display = "block";
+        }
+        }
+    </script>
+
+    <link rel="stylesheet" type="text/css" href="%s">
+    <style type="text/css">
+    </style>
+
+    </head>
+    <body>
+
+
+    <div id="content">
+    <br>
+    """ % (params['encoding'], params['title'], params['bootstrap_css'], params['scholar.js'] if params['show_citation']=='scholar.js' else '', css_file)
+
+    return prelog
+
+
+def get_html_disclaimer():
+    '''return str of disclaimer'''
+
+    import time, getpass
+
+    log_disclaimer = """
+<br><br /><br><br />
+<u><strong>Disclaimer:</strong></u><br /><br />
+<p><em>
+This material is presented to ensure timely dissemination of
+scholarly and technical work. Copyright and all rights therein
+are retained by authors or by other copyright holders.
+All person copying this information are expected to adhere to
+the terms and constraints invoked by each author's copyright.
+In most cases, these works may not be reposted
+without the explicit permission of the copyright holder.
+
+</em></p>
+
+
+Last modifiled:  %s
+
+<br />Author: %s
+
+<br><br />
+
+<p>This document was translated from bibtex by
+<a href="https://github.com/JianCheng/bibtex2html.py"><em>bibtex2html.py</em></a>
+</p>
+
+""" % (time.strftime("%Y-%m-%d, %H:%M:%S"), getpass.getuser())
+
+    return log_disclaimer
+
+
+
 def clean_entry(entry):
     '''Clean up an entry'''
 
@@ -696,12 +798,13 @@ def clean_entry(entry):
         entry[k] = v;
 
 
-def get_entry_output(entry):
+def get_entry_output(entry, out_path=''):
     """Get output html string for a bib entry
 
     Parameters
     ----------
-        entry :   a bib entry
+        entry    :   a bib entry
+        out_oath :   a path for output file
 
     Returns
     -------
@@ -713,7 +816,7 @@ def get_entry_output(entry):
 
     # --- author ---
     if 'author' in entry:
-        out.append('<span class="author">%s</span>,' % highlight_author(entry))
+        out.append('<span class="author">%s</span>,' % highlight_author(entry, out_path))
         if not params['single_line']:
             out.append('<br>')
 
@@ -791,7 +894,9 @@ def get_entry_output(entry):
     pdf_link = get_pdflink_from_entry(entry)
     if pdf_link!='':
         if params['use_icon'] and params['icon_pdf']:
-            out.append('<a target="%s" href="%s"><img src="%s" alt="[pdf]" style="width: %s; height: %s;"></a>' % (params['target_link'], pdf_link, params['icon_pdf'], params['icon_size'], params['icon_size']))
+            icon_pdf_file = params['icon_pdf'] if len(params['author_group'])==0 else params['author_group_icon_pdf']
+            icon_pdf_file = os.path.relpath(icon_pdf_file, os.path.dirname(out_path))
+            out.append('<a target="%s" href="%s"><img src="%s" alt="[pdf]" style="width: %s; height: %s;"></a>' % (params['target_link'], pdf_link, icon_pdf_file, params['icon_size'], params['icon_size']))
         else:
             out.append('[<a target="%s" href="%s">pdf</a>]' % (params['target_link'], pdf_link))
         out.append('&nbsp;')
@@ -804,7 +909,9 @@ def get_entry_output(entry):
             out.append('[')
         out.append('<a target="%s" href="%s">' % (params['target_link'], href_link))
         if params['use_icon'] and params['icon_www']:
-            out.append('<img src="%s" alt="[www]" style="width: %s; height: %s;"></a>' % (params['icon_www'], params['icon_size'], params['icon_size']))
+            icon_www_file = params['icon_www'] if len(params['author_group'])==0 else params['author_group_icon_www']
+            icon_www_file = os.path.relpath(icon_www_file, os.path.dirname(out_path))
+            out.append('<img src="%s" alt="[www]" style="width: %s; height: %s;"></a>' % (icon_www_file, params['icon_size'], params['icon_size']))
         else:
             out.append('link</a>')
         if not params['use_icon']:
@@ -846,8 +953,9 @@ def get_entry_output(entry):
         elif params['show_citation']=='scholar.js':
             out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (entry['title'], params['target_link_citation']) )
         elif params['show_citation']=='bs':
-            citations_url = params['dict_title'][entry['title'].lower()] if entry['title'].lower() in params['dict_title'] else ['not found', u'https://scholar.google.com/citations?user=%s&hl=en' % params['googlescholarID']]
-            out.append('\n[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (params['target_link_citation'], citations_url[1], citations_url[0]) )
+            if entry['title'].lower() in params['dict_title']:
+                citations_url = params['dict_title'][entry['title'].lower()]
+                out.append('\n[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (params['target_link_citation'], citations_url[1], citations_url[0]) )
         else:
             raise ValueError('wrong show_citation')
 
@@ -887,24 +995,8 @@ def get_entry_output(entry):
     return ''.join(out)
 
 
-def write_entries_by_type(bib_entries):
-    '''write bib_entries by types (journal, conference, etc.)'''
-
-    # create the html file with opted encoding
-    f1 = codecs.open(params['htmlfile_type'], 'w', encoding=params['encoding'])
-
-    # write the initial part of the file
-    f1.write(params['prelog'])
-
-    if params['show_page_title']:
-        f1.write('<h1>%s</h1>\n\n' % params['title']);
-
-    if params['show_total_citation']:
-        f1.write('%s\n\n' % params['google_scholar_out'][2])
-
-    if params['show_count_number']:
-        _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
-        f1.write('%s\n\n' % count_str)
+def get_categories_of_entries(bib_entries):
+    '''get list of caregories of entries, section names, section tags'''
 
     # lists according to publication type
     preprintlist = []
@@ -944,9 +1036,39 @@ def write_entries_by_type(bib_entries):
     seclist = ['Preprints', 'Books', 'Book Chapters', 'Journal Articles', 'Conference Articles', 'Conference Abstracts', 'Research Reports', 'Theses', 'Miscellaneous']
     secline = ['Preprints', 'Books', 'Book Chapters', 'Journals', 'Conferences', 'Abstracts', 'Research Reports', 'Theses', 'Miscellaneous']
 
+    return paperlists, seclist, secline
+
+def write_entries_by_type(bib_entries, show_total_citation=False):
+    '''write bib_entries by types (journal, conference, etc.)'''
+
+    # create the html file with opted encoding
+    f1 = codecs.open(params['htmlfile_type'], 'w', encoding=params['encoding'])
+
+    # write the initial part of the file
+    f1.write(get_html_prelog(params['htmlfile_type']))
+
+    if len(params['author_group']):
+        f1.write('''<br />
+<a href="../index.html"><strong> BACK TO INDEX </strong></a>
+<br /><br />\n\n''')
+
+    if params['show_page_title']:
+        f1.write('<h1>%s</h1>\n\n' % params['title']);
+
+    if show_total_citation:
+        f1.write('%s\n\n' % params['google_scholar_out'][2])
+
+    if params['show_count_number']:
+        _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
+        f1.write('%s\n\n' % count_str)
+
+    # write list of sections, papers
+    paperlists, seclist, secline = get_categories_of_entries(bib_entries)
+
     # write list of sections
-    str_year = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by year</b></a></span> &#8226;&nbsp;''' % os.path.basename(params['htmlfile_year']) if params['htmlfile_year'] else ''
-    f1.write('<p><big>&#8226;&nbsp;%s' % str_year)
+    if len(params['author_group'])==0:
+        str_year = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by year</b></a></span> &#8226;&nbsp;''' % os.path.basename(params['htmlfile_year']) if params['htmlfile_year'] else ''
+        f1.write('<p><big>&#8226;&nbsp;%s' % str_year)
     for papers, sec, secl in zip(paperlists, seclist, secline):
         strTmp = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name(sec), secl) if papers else ''
         f1.write(strTmp)
@@ -963,8 +1085,11 @@ def write_entries_by_type(bib_entries):
             else:
                 papers = sorted(papers, key=functools.cmp_to_key(cmp_by_year))
             for e in papers:
-                f1.write(get_entry_output(e))
+                f1.write(get_entry_output(e, params['htmlfile_type']))
             f1.write('\n%s\n\n\n' % ol_2)
+
+    if len(params['author_group']):
+        f1.write(get_html_disclaimer())
 
     f1.write(params['afterlog'])
     f1.close()
@@ -972,7 +1097,7 @@ def write_entries_by_type(bib_entries):
     print('Convert %s to %s' % (params['bibfile'], params['htmlfile_type']))
 
 
-def write_entries_by_year(bib_entries):
+def write_entries_by_year(bib_entries, show_total_citation=False):
     '''write bib_entries by types (journal, conference, etc.)'''
 
     year_entries_dict = {}
@@ -988,12 +1113,12 @@ def write_entries_by_year(bib_entries):
     f1 = codecs.open(params['htmlfile_year'], 'w', encoding=params['encoding'])
 
     # write the initial part of the file
-    f1.write(params['prelog'])
+    f1.write(get_html_prelog(params['htmlfile_year']))
 
     if params['show_page_title']:
         f1.write('<h1>%s</h1>\n\n' % params['title']);
 
-    if params['show_total_citation']:
+    if show_total_citation:
         f1.write('%s\n\n' % params['google_scholar_out'][2])
 
     if params['show_count_number']:
@@ -1021,13 +1146,324 @@ def write_entries_by_year(bib_entries):
             else:
                 papers = sorted(papers, key=functools.cmp_to_key(cmp_by_type))
             for e in papers:
-                f1.write(get_entry_output(e))
+                f1.write(get_entry_output(e, params['htmlfile_year']))
             f1.write('\n%s\n\n\n' % ol_2)
 
     f1.write(params['afterlog'])
     f1.close()
 
     print('Convert %s to %s' % (params['bibfile'], params['htmlfile_year']))
+
+
+def write_entries_group(bib_entries):
+    '''write bib_entries by types in a group (journal, conference, etc.)'''
+
+    # copy icons
+    icons_folder = os.path.join(params['htmlfile_group'], 'Icons')
+    params['author_group_Icons'] = icons_folder
+    if not os.path.exists(icons_folder):
+        os.mkdir(icons_folder)
+    if params['icon_www']:
+        params['author_group_icon_www'] = os.path.join(icons_folder, os.path.basename(params['icon_www']))
+        shutil.copyfile(params['icon_www'], params['author_group_icon_www'])
+    if params['icon_pdf']:
+        params['author_group_icon_pdf'] = os.path.join(icons_folder, os.path.basename(params['icon_pdf']))
+        shutil.copyfile(params['icon_pdf'], params['author_group_icon_pdf'])
+
+    # copy css file
+    static_folder = os.path.join(params['htmlfile_group'], 'Static')
+    params['author_group_Static'] = static_folder
+    if not os.path.exists(static_folder):
+        os.mkdir(static_folder)
+    if params['css_file']:
+        params['author_group_css'] = os.path.join(static_folder, os.path.basename(params['css_file']))
+        shutil.copyfile(params['css_file'], params['author_group_css'])
+
+    title = params['title']
+    params['css_file'] = params['author_group_css']
+
+    # write authors
+    _write_entries_group_author(bib_entries)
+    params['dict_title'] = params['dict_title_group']
+
+    # write complete-bibliography.html
+    params['title'] = title
+    _write_entries_group_complete(bib_entries)
+
+    # write complete-bibliography.bib
+    biblio_folder = os.path.join(params['htmlfile_group'], 'Bibliography')
+    params['outbibfile'] = os.path.join(biblio_folder, 'complete-bibliography.bib')
+    write_entries_to_bibfile(bib_entries)
+
+    # write years
+    _write_entries_group_year(bib_entries)
+
+    # write categories
+    _write_entries_group_category(bib_entries)
+
+    # write index.html
+    params['title'] = title
+    _write_entries_group_index(bib_entries)
+
+
+def _write_entries_group_index(bib_entries):
+    '''write bib_entries to a index.html file.'''
+
+    html_file = os.path.join(params['htmlfile_group'], 'index.html')
+
+    # create the html file with opted encoding
+    f1 = codecs.open(html_file, 'w', encoding=params['encoding'])
+
+    # write the initial part of the file
+    f1.write(get_html_prelog(html_file))
+
+    if params['show_page_title']:
+        f1.write('<h1>%s</h1>\n\n' % params['title']);
+
+    #  if params['show_count_number']:
+    #      _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
+    #      f1.write('%s\n\n' % count_str)
+
+
+    # selection by year
+    f1.write("""
+<table width="100%">
+ <tr><td><h2>Selection by year</h2></td></tr>
+</table>
+""" )
+
+    year_entries_dict = {}
+    for e in bib_entries:
+        if e['year'] in year_entries_dict:
+            year_entries_dict[e['year']].append(e)
+        else:
+            year_entries_dict[e['year']]=[e]
+
+    years = sorted(year_entries_dict.keys())
+    f1.write('\n\n<br /><table align="center" cellpadding="4" cellspacing="2">\n')
+    for ii in range(len(years)):
+        if ii%9 and ii!=0:
+            f1.write('<td><a href="Year/%s.html">%s</a></td>\n' % (years[ii], years[ii]))
+        else:
+            if ii:
+                f1.write('</tr>\n')
+            f1.write('<tr align="left" valign="top">\n<td><a href="Year/%s.html">%s</a></td>\n' % (years[ii], years[ii]))
+    f1.write('</tr>\n </table><br />\n\n')
+
+
+    # selection by category
+    seclist = ['Preprints', 'Books', 'Book Chapters', 'Journal Articles', 'Conference Articles', 'Conference Abstracts', 'Research Reports', 'Theses', 'Miscellaneous']
+    file_names = [os.path.join(params['author_group_Category'], get_anchor_name(secName)+'.html') for secName in seclist]
+    categories_print = ['']*len(file_names)
+    for ii in range(len(file_names)):
+        if os.path.exists(file_names[ii]):
+            categories_print[ii] = '<td><a href="%s">%s</a></td>' % (os.path.relpath(file_names[ii], os.path.dirname(html_file)), seclist[ii])
+
+    f1.write("""
+<table width="100%%">
+ <tr><td><h2>Selection by category</h2></td></tr>
+</table>
+
+
+<br /><table align="center" cellpadding="4" cellspacing="2">
+<tr align="left" valign="top">
+%s
+%s
+%s
+</tr>
+<tr align="left" valign="top">
+%s
+%s
+%s
+</tr>
+<tr align="left" valign="top">
+%s
+%s
+%s
+</tr>
+</table><br />\n\n\n
+"""% tuple(cat for cat in categories_print))
+    #  f1.write('\n\n\n')
+
+
+    # selection by author
+    author_list=[None]*26
+    for author in params['author_group'].keys():
+        author_split = author.rsplit(' ', 1)
+        jj = ord(author_split[1][0].lower()) - ord('a')
+        if author_list[jj] is None:
+            author_list[jj]=[author]
+        else:
+            author_list[jj].append(author)
+
+    f1.write("""
+<table width="100%%">
+ <tr><td><h2>Selection by author</h2></td></tr>
+</table>
+
+
+<br /><table align="center" cellpadding="4" cellspacing="4">
+<tr align="center">\n""")
+
+    for ii in range(26):
+        out_str = chr(65+ii)
+        if author_list[ii] is not None:
+            out_str = '<a href="#AUTH%s">%s</a>' % (out_str, out_str)
+        f1.write('<td><b>%s</b></td>\n' %  out_str)
+        if not (ii+1)%13:
+            f1.write('</tr>\n<tr align="center">\n')
+
+    f1.write('</table><br />\n\n\n')
+
+    f1.write('<table align="center" cellpadding="3" cellspacing="1">\n')
+    #  f1.write('<tr align="left" valign="top">\n')
+
+    for ii in range(26):
+        if author_list[ii] is not None:
+
+            out_str = chr(65+ii)
+            f1.write('<tr align="left" valign="top">\n<td>%s</td>\n' % out_str)
+
+            for jj in range(len(author_list[ii])):
+
+                str_tag = '<a name="AUTH%s"></a>' % out_str
+                author_split = author_list[ii][jj].rsplit(' ', 1)
+                str_author = author_split[1] + '-' + author_split[0].replace(' ', '-')+'.html'
+                f1.write('<td>%s<a href="Author/%s">%s <strong>%s</strong></a></td>\n' % (str_tag if jj==0 else '', str_author, author_split[0], author_split[1]) )
+
+                if not (jj+1)%4:
+                    f1.write('</tr>\n<tr align="left" valign="top">\n<td></td>\n')
+
+    f1.write('''</tr>
+</table>
+<br />\n\n\n''')
+
+    # write Complete bibliography
+    f1.write("""
+<table width="100%%">
+ <tr><td><h2>Complete bibliography</h2></td></tr>
+</table>
+
+
+<br /><table align="center" cellpadding="4" cellspacing="2">
+<tr align="left" valign="top">
+<td><a href="Bibliography/complete-bibliography.html">Complete bibliography as a single HTML page</a>
+</td>
+</tr>
+<tr align="left" valign="top">
+<td><a href="Bibliography/complete-bibliography.bib">Complete bibliography as a single BIBTEX file</a>
+</td>
+</tr>
+</table><br />\n\n\n""")
+
+
+    f1.write(get_html_disclaimer())
+
+    # afterlog
+    f1.write(params['afterlog'])
+    f1.close()
+
+    print('Convert %s to %s' % (params['bibfile'], html_file))
+
+
+
+def _write_entries_group_year(bib_entries):
+    '''write bib_entries by types for different years.'''
+
+    year_folder = os.path.join(params['htmlfile_group'], 'Year')
+    params['author_group_Year'] = year_folder
+    if not os.path.exists(year_folder):
+        os.mkdir(year_folder)
+
+    year_entries_dict = {}
+    for e in bib_entries:
+        if e['year'] in year_entries_dict:
+            year_entries_dict[e['year']].append(e)
+        else:
+            year_entries_dict[e['year']]=[e]
+
+    #  print 'year_entries_dict=', year_entries_dict
+
+    for year, entries in year_entries_dict.items():
+
+        html_file = os.path.join(year_folder, str(year)+'.html')
+        params['htmlfile_type'] = html_file
+        params['title'] = 'Publications of Year %s' % year
+
+        write_entries_by_type(entries, show_total_citation=False)
+
+
+def _write_entries_group_author(bib_entries):
+    '''write bib_entries by types for different authors.'''
+
+    author_folder = os.path.join(params['htmlfile_group'], 'Author')
+    params['author_group_Author'] = author_folder
+    if not os.path.exists(author_folder):
+        os.mkdir(author_folder)
+
+    params['dict_title_group'] = {}
+    for author, value in params['author_group'].items():
+
+        author_split = author.rsplit(' ', 1)
+        if len(author_split)!=2:
+            raise ValueError('author_split should have 2 elements for first and last name')
+        # last-first.html
+        html_file = os.path.join(author_folder, author_split[1] + '-' + author_split[0].replace(' ', '-')+'.html')
+        params['htmlfile_type'] = html_file
+        params['title'] = 'Publications of %s' % author
+
+        entries_selected=[]
+        for e in bib_entries:
+            if is_entry_selected(e, selection_and={'author': [author]}):
+                entries_selected.append(e)
+
+        for k, v in value.items():
+            if k.lower()=='scholarid':
+                params['googlescholarID'] = v
+            else:
+                params['googlescholarID'] = ''
+
+        if params['show_citation']=='bs' and params['googlescholarID']:
+            out_scholar = get_title_citation_url(params['googlescholarID'])
+            params['dict_title'] = out_scholar[0]
+            params['google_scholar_out'] = out_scholar[1:]
+            params['dict_title_group'].update(out_scholar[0])
+
+        write_entries_by_type(entries_selected, show_total_citation=params['show_total_citation'] and params['googlescholarID'])
+
+
+def _write_entries_group_complete(bib_entries):
+    '''write bib_entries by types in complete-bibliography.html (journal, conference, etc.)'''
+
+    biblio_folder = os.path.join(params['htmlfile_group'], 'Bibliography')
+    params['author_group_Bibliography'] = biblio_folder
+    if not os.path.exists(biblio_folder):
+        os.mkdir(biblio_folder)
+
+    params['htmlfile_type'] = os.path.join(biblio_folder, 'complete-bibliography.html')
+
+    write_entries_by_type(bib_entries, show_total_citation=False)
+
+
+def _write_entries_group_category(bib_entries):
+    '''write bib_entries by types in in different categories (journal, conference, etc.)'''
+
+    folder = os.path.join(params['htmlfile_group'], 'Category')
+    params['author_group_Category'] = folder
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+
+    # write list of sections, papers
+    paperlists, seclist, _ = get_categories_of_entries(bib_entries)
+
+    for ii in range(len(paperlists)):
+        if len(paperlists[ii]):
+
+            html_file = os.path.join(folder, get_anchor_name(seclist[ii])+'.html')
+            params['htmlfile_type'] = html_file
+            params['title'] = 'Publications of %s' % seclist[ii]
+
+            write_entries_by_type(paperlists[ii], show_total_citation=False)
 
 
 def write_entries_to_bibfile(bib_entries):
@@ -1068,7 +1504,7 @@ def main():
         #  print config.items(param_str)
 
         #  strings, lists, dicts
-        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'author_sign', \
+        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'author_sign', 'author_group', \
                          'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted', \
                          'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', 'icon_size', \
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding', \
@@ -1096,18 +1532,26 @@ def main():
     params['show_paper_style'] = params['show_paper_style'].lower()
 
     # use different output html file for different types
-    if params['show_paper_style']=='type':
-        params['htmlfile_type'] = _htmlfile
-        params['htmlfile_year'] = ''
-    elif params['show_paper_style']=='year':
-        params['htmlfile_type'] = ''
-        params['htmlfile_year'] = _htmlfile
-    elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
+    if len(params['author_group']):
         file_name , file_ext = os.path.splitext(_htmlfile)
-        params['htmlfile_type'] = '%s_by_type%s' %(file_name, file_ext)
-        params['htmlfile_year'] = '%s_by_year%s' %(file_name, file_ext)
+        if not os.path.exists(file_name):
+            os.mkdir(file_name)
+
+        params['htmlfile_group'] = file_name
+
     else:
-        raise ValueError('wrong show_paper_style')
+        if params['show_paper_style']=='type':
+            params['htmlfile_type'] = _htmlfile
+            params['htmlfile_year'] = ''
+        elif params['show_paper_style']=='year':
+            params['htmlfile_type'] = ''
+            params['htmlfile_year'] = _htmlfile
+        elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
+            file_name , file_ext = os.path.splitext(_htmlfile)
+            params['htmlfile_type'] = '%s_by_type%s' %(file_name, file_ext)
+            params['htmlfile_year'] = '%s_by_year%s' %(file_name, file_ext)
+        else:
+            raise ValueError('wrong show_paper_style')
 
     params['bibfile'] = _bibfile
     if _outbibfile:
@@ -1124,49 +1568,10 @@ def main():
     current_year = datetime.date.today().year
     params['show_citation_year'] = current_year - params['show_citation_before_years']
 
+    if params['show_citation']!='bs' and params['show_total_citation']:
+        raise ValueError("show_total_citation==True needs show_citation=='bs'")
 
-    # html prelog
-    # modify according to your needs
-    prelog = """<!DOCTYPE HTML
-        PUBLIC "-//W3C//DTD HTML 4.01//EN"
-        "https://www.w3.org/TR/html4/strict.dtd">
-    <head>
-    <meta http-equiv=Content-Type content="text/html; charset=%s">
-    <title>%s</title>
-
-    <script type="text/javascript" src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
-    <link rel="stylesheet" href="%s">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="%s"></script>
-
-
-    <script type="text/javascript">
-        function toggle(showHideDiv, switchTextDiv)
-        {
-        var ele = document.getElementById(showHideDiv);
-        var text = document.getElementById(switchTextDiv);
-        if(ele.style.display == "block")
-        {
-            ele.style.display = "none";
-        }
-        else
-        {
-            ele.style.display = "block";
-        }
-        }
-    </script>
-
-    <link rel="stylesheet" type="text/css" href="%s">
-    <style type="text/css">
-    </style>
-
-    </head>
-    <body>
-
-
-    <div id="content">
-    <br>
-    """ % (params['encoding'], params['title'], params['bootstrap_css'], params['scholar.js'] if params['show_citation']=='scholar.js' else '', params['css_file'])
+    params['author_group_authors'] = list(params['author_group'].keys())
 
 
     # html afterlog
@@ -1188,7 +1593,6 @@ def main():
         </html>
         """
 
-    params['prelog'] = prelog
     params['afterlog'] = afterlog
 
     with io.open(_bibfile, 'r', encoding='utf8') as bibtex_file:
@@ -1214,26 +1618,30 @@ def main():
             print ('e after clean =', e)
 
         if is_entry_selected(e):
-            entries_selected.append(e)
+            if len(params['author_group'])==0 or len(params['author_group'])>0 and is_entry_selected(e, selection_or={'author': params['author_group_authors']}):
+                entries_selected.append(e)
 
-    if params['show_citation']=='bs':
-        out_scholar = get_title_citation_url(params['googlescholarID'])
-        params['dict_title'] = out_scholar[0]
-        params['google_scholar_out'] = out_scholar[1:]
 
-    if params['show_citation']!='bs' and params['show_total_citation']:
-        raise ValueError("show_total_citation==True needs show_citation=='bs'")
+    if len(params['author_group']):
 
-    if params['show_paper_style']=='type':
-        write_entries_by_type(entries_selected);
-    elif params['show_paper_style']=='year':
-        write_entries_by_year(entries_selected);
-    elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
-        write_entries_by_type(entries_selected);
-        write_entries_by_year(entries_selected);
+        write_entries_group(entries_selected)
 
-    if params['outbibfile']:
-        write_entries_to_bibfile(entries_selected)
+    else:
+        if params['show_citation']=='bs':
+            out_scholar = get_title_citation_url(params['googlescholarID'])
+            params['dict_title'] = out_scholar[0]
+            params['google_scholar_out'] = out_scholar[1:]
+
+        if params['show_paper_style']=='type':
+            write_entries_by_type(entries_selected, params['show_total_citation']);
+        elif params['show_paper_style']=='year':
+            write_entries_by_year(entries_selected, params['show_total_citation']);
+        elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
+            write_entries_by_type(entries_selected, params['show_total_citation']);
+            write_entries_by_year(entries_selected, params['show_total_citation']);
+
+        if params['outbibfile']:
+            write_entries_to_bibfile(entries_selected)
 
 
 if __name__ == '__main__':

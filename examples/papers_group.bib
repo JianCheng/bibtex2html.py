@@ -1,0 +1,112 @@
+
+@article{jiang2018ubo,
+  title={UBO detector--a cluster-based, fully automated pipeline for extracting white matter hyperintensities},
+  author={Jiang, Jiyang and Liu, Tao and Zhu, Wanlin and Koncz, Rebecca and Liu, Hao and Lee, Teresa and Sachdev, Perminder S and Wen, Wei},
+  journal={NeuroImage},
+  volume={174},
+  pages={539--549},
+  year={2018},
+  publisher={Elsevier}
+}
+
+@inproceedings{cheng2018quantifying,
+  title={On Quantifying Local Geometric Structures of Fiber Tracts},
+  author={Cheng, Jian and Liu, Tao and Shi, Feng and Bai, Ruiliang and Zhang, Jicong and Zhu, Haogang and Tao, Dacheng and Basser, Peter J},
+  booktitle={International Conference on Medical Image Computing and Computer-Assisted Intervention (MICCAI'18)},
+  pages={392--400},
+  year={2018},
+  organization={Springer}
+}
+
+@article{liu2010effects,
+  title={The effects of age and sex on cortical sulci in the elderly},
+  author={Liu, Tao and Wen, Wei and Zhu, Wanlin and Trollor, Julian and Reppermund, Simone and Crawford, John and Jin, Jesse S and Luo, Suhuai and Brodaty, Henry and Sachdev, Perminder},
+  journal={Neuroimage},
+  volume={51},
+  number={1},
+  pages={19--27},
+  year={2010},
+  publisher={Elsevier}
+}
+
+@article{guan2017classifying,
+  title={Classifying MCI subtypes in community-dwelling elderly using cross-sectional and longitudinal MRI-based biomarkers},
+  author={Guan, Hao and Liu, Tao and Jiang, Jiyang and Tao, Dacheng and Zhang, Jicong and Niu, Haijun and Zhu, Wanlin and Wang, Yilong and Cheng, Jian and Kochan, Nicole A and others},
+  journal={Frontiers in aging neuroscience},
+  volume={9},
+  pages={309},
+  year={2017},
+  publisher={Frontiers}
+}
+
+@Article{cheng:TMI2017,
+  author               = {Jian Cheng and Dinggang Shen and Pew-Thian Yap and Peter J. Basser},
+  title                = {{Single- and Multiple-Shell Uniform Sampling Schemes for Diffusion MRI Using Spherical Codes}},
+  journal              = {IEEE transactions on Medical Imaging},
+  year                 = {2017},
+  note                 = {accept},
+  abstract             = {In diffusion MRI (dMRI), a good sampling scheme is important for efficient acquisition and robust reconstruction. Diffusion weighted signal is normally acquired on single or multiple shells in q-space. Signal samples are typically distributed uniformly on different shells to make them invariant to the orientation of structures within tissue, or the laboratory coordinate frame. The Electrostatic Energy Minimization (EEM) method, originally proposed for single shell sampling scheme in dMRI, was recently generalized to multi-shell schemes, called Generalized EEM (GEEM). GEEM has been successfully used in the Human Connectome Project (HCP). However, EEM does not directly address the goal of optimal sampling, i.e., achieving large angular separation between sampling points. In this paper, we propose a more natural formulation, called Spherical Code (SC), to directly maximize the minimal angle between different samples in single or multiple shells. We consider not only continuous problems to design single or multiple shell sampling schemes, but also discrete problems to uniformly extract sub-sampled schemes from an existing single or multiple shell scheme, and to order samples in an existing scheme. We propose five algorithms to solve the above problems, including an incremental SC (ISC), a sophisticated greedy algorithm called Iterative Maximum Overlap Construction (IMOC), an 1-Opt greedy method, a Mixed Integer Linear Programming (MILP) method, and a Constrained Non-Linear Optimization (CNLO) method. To our knowledge, this is the first work to use the SC formulation for single or multiple shell sampling schemes in dMRI. Experimental results indicate that SC methods obtain larger angular separation and better rotational invariance than the state-of-the-art EEM and GEEM. The related codes and a tutorial have been released in DMRITool.},
+  arxiv                = {arXiv:1706.06682},
+  author_corresponding = {Jian Cheng and Pew-Thian Yap and Peter J. Basser},
+  doi                  = {10.1109/TMI.2017.2756072},
+  project              = {https://diffusionmritool.github.io/tutorial_qspacesampling.html},
+}
+
+@Article{cheng_NI2014,
+  author               = {Cheng, Jian and Deriche, Rachid and Jiang, Tianzi and Shen, Dinggang and Yap, Pew-Thian},
+  title                = {{Non-Negative Spherical Deconvolution (NNSD) for estimation of fiber Orientation Distribution Function in single-/multi-shell diffusion MRI}},
+  journal              = {NeuroImage},
+  year                 = {2014},
+  volume               = {101},
+  pages                = {750--764},
+  abstract             = {Spherical Deconvolution (SD) is commonly used for estimating fiber Orientation Distribution Functions (fODFs) from diffusion-weighted signals. Existing SD methods can be classified into two categories: 1) Continuous Representation based SD (CR-SD), where typically Spherical Harmonic (SH) representation is used for convenient analytical solutions, and 2) Discrete Representation based SD (DR-SD), where the signal profile is represented by a discrete set of basis functions uniformly oriented on the unit sphere. A feasible fODF should be non-negative and should integrate to unity throughout the unit sphere S 2. However, to our knowledge, most existing SH-based SD methods enforce non-negativity only on discretized points and not the whole continuum of S 2. Maximum Entropy SD (MESD) and Cartesian Tensor Fiber Orientation Distributions (CT-FOD) are the only SD methods that ensure non-negativity throughout the unit sphere. They are however computational intensive and are susceptible to errors caused by numerical spherical integration. Existing SD methods are also known to overestimate the number of fiber directions, especially in regions with low anisotropy. DR-SD introduces additional error in peak detection owing to the angular discretization of the unit sphere. This paper proposes a SD framework, called Non-Negative SD (NNSD), to overcome all the limitations above. NNSD is significantly less susceptible to the false-positive peaks, uses SH representation for efficient analytical spherical deconvolution, and allows accurate peak detection throughout the whole unit sphere. We further show that NNSD and most existing SD methods can be extended to work on multi-shell data by introducing a three-dimensional fiber response function. We evaluated NNSD in comparison with Constrained SD (CSD), a quadratic programming variant of CSD, MESD, and an L1-norm regularized non-negative least-squares DR-SD. Experiments on synthetic and real single-/multi-shell data indicate that NNSD improves estimation performance in terms of mean difference of angles, peak detection consistency, and anisotropy contrast between isotropic and anisotropic regions.},
+  author_corresponding = {Cheng, Jian and Yap, Pew-Thian},
+  doi                  = {10.1016/j.neuroimage.2014.07.062},
+  file                 = {/home/jcheng/F_STUDY/study/mywork/paper/acceptted/Non-Negative Spherical Deconvolution (NNSD) for estimation of fiber Orientation Distribution Function in single- multi-shell diffusion MRI_NI14.pdf},
+  hlnote2              = {Honorable Mention in ISBI HARDI Reconstruction Challenge in 2013; the best technique in terms of local comparison.},
+  pdf                  = {https://pdfs.semanticscholar.org/fc76/327ac26d573283db98939119660588c2af6f.pdf},
+  publisher            = {Elsevier},
+}
+
+
+@InProceedings{Cheng_ODF_MICCAI2010,
+  author    = {Jian Cheng and Aurobrata Ghosh and Rachid Deriche and Tianzi Jiang},
+  title     = {{Model-Free, Regularized, Fast, and Robust Analytical Orientation Distribution Function Estimation}},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI'10)},
+  year      = {2010},
+  volume    = {6361},
+  pages     = {648-656},
+  month     = {sep},
+  abstract  = {High Angular Resolution Imaging (HARDI) can better explore the complex micro-structure of white matter compared to Diffusion Tensor Imaging (DTI). Orientation Distribution Function (ODF) in HARDI is used to describe the probability of the fiber direction. There are two type definitions of the ODF, which were respectively proposed in Q-Ball Imaging (QBI) and Diffusion Spectrum Imaging (DSI). Some analytical reconstructions methods have been proposed to estimate these two type of ODFs from single shell HARDI data. However they all have some assumptions and intrinsic modeling errors. In this article, we propose, almost without any assumption, a uniform analytical method to estimate these two ODFs from DWI signals in q space, which is based on Spherical Polar Fourier Expression (SPFE) of signals. The solution is analytical and is a linear transformation from the q-space signal to the ODF represented by Spherical Harmonics (SH). It can naturally combines the DWI signals in different Q-shells. Moreover It can avoid the intrinsic Funk-Radon Transform (FRT) blurring error in QBI and it does not need any assumption of the signals, such as the multiple tensor model and mono/multi-exponential decay. We validate our method using synthetic data, phantom data and real data. Our method works well in all experiments, especially for the data with low SNR, low anisotropy and non-exponential decay.},
+  doi       = {10.1007/978-3-642-15705-9_79},
+  hal_id    = {inria-00496929},
+  owner     = {jcheng},
+  pdf       = {https://hal.inria.fr/inria-00496929/document},
+  poster    = {https://www.dropbox.com/s/z28dckp6gv6lhf2/ODF_MICCAI2010_poster.pdf},
+  project   = {https://diffusionmritool.github.io/tutorial_spfi.html},
+  timestamp = {2010.07.27},
+}
+
+@InProceedings{cheng_MICCAI2011,
+  author    = {Cheng, Jian and Ghosh, Aurobrata and Jiang, Tianzi and Deriche, Rachid},
+  title     = {{Diffeomorphism Invariant Riemannian Framework for Ensemble Average Propagator Computing}},
+  booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI'11)},
+  year      = {2011},
+  volume    = {6892},
+  series    = {LNCS},
+  pages     = {98-106},
+  publisher = {Springer Berlin / Heidelberg},
+  abstract  = { Background: In Diffusion Tensor Imaging (DTI), Riemannian framework based on Information Geometry theory has been proposed for processing tensors on estimation, interpolation, smoothing, regularization, segmentation, statistical test and so on. Recently Riemannian framework has been generalized to Orientation Distribution Function (ODF) and it is applicable to any Probability Density Function (PDF) under orthonormal basis representation. Spherical Polar Fourier Imaging (SPFI) was proposed for ODF and Ensemble Average Propagator (EAP) estimation from arbitrary sampled signals without any assumption.
+Purpose: Tensors only can represent Gaussian EAP and ODF is the radial integration of EAP, while EAP has full information for diffusion process. To our knowledge, so far there is no work on how to process EAP data. In this paper, we present a Riemannian framework as a mathematical tool for such task.
+Method: We propose a state-of-the-art Riemannian framework for EAPs by representing the square root of EAP, called wavefunction based on quantum mechanics, with the Fourier dual Spherical Polar Fourier (dSPF) basis. In this framework, the exponential map, logarithmic map and geodesic have closed forms, and weighted Riemannian mean and median uniquely exist. We analyze theoretically the similarities and differences between Riemannian frameworks for EAPs and for ODFs and tensors. The Riemannian metric for EAPs is diffeomorphism invariant, which is the natural extension of the affine-invariant metric for tensors. We propose Log-Euclidean framework to fast process EAPs, and Geodesic Anisotropy (GA) to measure the anisotropy of EAPs. With this framework, many important data processing operations, such as interpolation, smoothing, atlas estimation, Principal Geodesic Analysis (PGA), can be performed on EAP data.
+Results and Conclusions: The proposed Riemannian framework was validated in synthetic data for interpolation, smoothing, PGA and in real data for GA and atlas estimation. Riemannian median is much robust for atlas estimation.},
+  doi       = {10.1007/978-3-642-23629-7_13},
+  hal_id    = {inria-00615431},
+  hlnote2   = {MICCAI Student Travel Award},
+  keywords  = {manifold},
+  owner     = {jcheng},
+  pdf       = {https://hal.inria.fr/inria-00615431/document},
+  timestamp = {2011.07.06},
+}
+
+
