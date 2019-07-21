@@ -482,6 +482,16 @@ def get_publisher_shortname_from_entry(entry):
         dem_3 = pub.find("'")
         dem = dem_2 if dem_3<0 else dem_3
         return pub[dem_1+1:dem]
+    else:
+        pub_lower = pub.lower()
+        for cp in params['count_publisher']:
+            if len(cp)==1:
+                if cp[0].lower() in pub_lower:
+                    return cp[0]
+            else:
+                for ii in range(1, len(cp)):
+                    if cp[ii].lower() in pub_lower:
+                        return cp[0]
 
     return pub
 
