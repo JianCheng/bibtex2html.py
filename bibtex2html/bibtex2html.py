@@ -1156,7 +1156,7 @@ def main():
 
     <div id="content">
     <br>
-    """ % (params['encoding'], params['title'], params['bootstrap_css'], params['scholar.js'], params['css_file'])
+    """ % (params['encoding'], params['title'], params['bootstrap_css'], params['scholar.js'] if params['show_citation']=='scholar.js' else '', params['css_file'])
 
 
     # html afterlog
