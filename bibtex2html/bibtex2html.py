@@ -5,7 +5,7 @@
 Description: Convert bibtex to html.
 
 Usage:
-  bibtex2html.py <bibfile> <htmlfile> [-v <verbose>]  [--conf <conffile>] [-i <input>] [--outbib <outbibfile>]
+  bibtex2html.py <bibfile> <htmlfile> [-v <verbose>]  [--conf <conffile>] [-i <input>] [--outbib <outbibfile>] [--nc]
   bibtex2html.py (-h | --help)
 
 Options:
@@ -14,18 +14,23 @@ Options:
   -v --verbose <verbose>   Verbose level. [default: 0]
 
   -c --conf <conffile>     Configuration file.
-  -i --input   <input>     Input cmd parameters which can override some parameters in -c.
+  -i --input <input>       Input cmd parameters which can override some parameters in -c.
   --outbib <outbibfileb>   Output .bib file with cleaned and selected bib entries
+  --nc                     No citation. Don't use google scholar. Same as -i "{'show_citation':'no', 'show_total_citation':False}"
 
 Examples:
 
 bibtex2html.py papers.bib papers.html
 bibtex2html.py papers.bib papers.html -c papers_conf.ini
+bibtex2html.py papers.bib papers.html -c papers_conf.ini --nc
 bibtex2html.py papers.bib papers.html -c papers_conf.ini --outbib out.bib
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type_year', 'bulleted_list':'ol_reversed'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'css_file': 'style.css'}"
 bibtex2html.py papers.bib papers.html -c papers_conf.ini -i "{'show_paper_style':'type', 'selection_and': {'author': ['Jian Cheng'], 'year':[2010,2013] }}"
+
+bibtex2html.py papers.bib papers -c group_conf.ini
+bibtex2html.py papers.bib papers -c group_conf.ini --nc
 
 Author(s): Jian Cheng (jian.cheng.1983@gmail.com)
 """
@@ -1488,7 +1493,7 @@ def main():
     _htmlfile = args['<htmlfile>']
     _verbose = int(args['--verbose'])
     _conffile = args['--conf']
-    _input = args['<input>']
+    _input = args['--input']
     _outbibfile = args['--outbib']
 
     if _verbose>=1:
@@ -1526,6 +1531,10 @@ def main():
         paramsInput = ast.literal_eval(_input)
         for k, v in paramsInput.items():
             params[k] = v
+
+    if args['--nc']:
+        params['show_total_citation'] = False
+        params['show_citation'] = 'no'
 
     # use lower words in some keys
     #  params['journal_fullname_highlighted'] = [name.lower() for name in params['journal_fullname_highlighted'] ]
