@@ -1435,11 +1435,14 @@ def _write_entries_group_author(bib_entries):
             if is_entry_selected(e, selection_and={'author': [author]}):
                 entries_selected.append(e)
 
-        for k, v in value.items():
-            if k.lower()=='scholarid':
-                params['googlescholarID'] = v
-            else:
-                params['googlescholarID'] = ''
+        if len(value):
+            for k, v in value.items():
+                if k.lower()=='scholarid':
+                    params['googlescholarID'] = v
+                else:
+                    params['googlescholarID'] = ''
+        else:
+            params['googlescholarID'] = ''
 
         if params['show_citation']=='bs' and params['googlescholarID']:
             out_scholar = get_title_citation_url(params['googlescholarID'])
