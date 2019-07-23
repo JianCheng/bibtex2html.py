@@ -1253,7 +1253,7 @@ def _write_entries_group_index(bib_entries):
         else:
             year_entries_dict[e['year']]=[e]
 
-    years = sorted(year_entries_dict.keys())
+    years = sorted(year_entries_dict.keys(), reverse=True)
     f1.write('\n\n<br /><table align="center" cellpadding="4" cellspacing="2">\n')
     for ii in range(len(years)):
         if ii%9 and ii!=0:
