@@ -544,14 +544,18 @@ def get_publisher_countnumber_from_entries(entries):
             if name.lower()==name1.lower():
                 count_number[i] += 1
 
-    count_str_list=['<p>&#8226;&nbsp;']
-    for name, num in zip(count_name, count_number):
-        if num>0:
-            str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
-            count_str_list.append(str_count)
-    count_str_list.append('</p>')
+    if sum(count_number):
+        count_str_list=['<p>&#8226;&nbsp;']
+        for name, num in zip(count_name, count_number):
+            if num>0:
+                str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
+                count_str_list.append(str_count)
+        count_str_list.append('</p>')
 
-    return count_name, count_number, ''.join(count_str_list)
+        return count_name, count_number, ''.join(count_str_list)
+
+    else:
+        return [], [], '<p>&nbsp;</p>'
 
 
 def is_entry_selected_by_key(entry, k, v):
