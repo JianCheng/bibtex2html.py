@@ -1273,6 +1273,10 @@ def _write_entries_group_index(bib_entries):
         if os.path.exists(file_names[ii]):
             categories_print[ii] = '<td><a href="%s">%s</a></td>' % (os.path.relpath(file_names[ii], os.path.dirname(html_file)), seclist[ii])
 
+    categories_print = [cat for cat in categories_print if cat!='']
+    if len(categories_print)<9:
+        categories_print += ['']*(9-len(categories_print))
+
     f1.write("""
 <table width="100%%">
  <tr><td><h2>Selection by category</h2></td></tr>
