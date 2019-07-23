@@ -653,7 +653,8 @@ def get_bulleted_list_str():
 def get_html_prelog(out_path=''):
     '''get prelog in html.'''
 
-    css_file = os.path.relpath(params['css_file'], os.path.dirname(out_path))
+    css_file = os.path.relpath(params['css_file'], os.path.dirname(out_path)) if params['css_file'] and os.path.exists(params['css_file']) else ''
+    bootstrap_css_file = os.path.relpath(params['bootstrap_css'], os.path.dirname(out_path)) if params['bootstrap_css'] and os.path.exists(params['bootstrap_css']) else params['bootstrap_css']
 
     # html prelog
     # modify according to your needs
@@ -696,7 +697,7 @@ def get_html_prelog(out_path=''):
 
     <div id="content">
     <br>
-    """ % (params['encoding'], params['title'], params['bootstrap_css'], params['scholar.js'] if params['show_citation']=='scholar.js' else '', css_file)
+    """ % (params['encoding'], params['title'], bootstrap_css_file, params['scholar.js'] if params['show_citation']=='scholar.js' else '', css_file)
 
     return prelog
 
@@ -1184,12 +1185,16 @@ def write_entries_group(bib_entries):
     params['author_group_Static'] = static_folder
     if not os.path.exists(static_folder):
         os.mkdir(static_folder)
-    if params['css_file']:
+    if params['css_file'] and os.path.exists(params['css_file']):
         params['author_group_css'] = os.path.join(static_folder, os.path.basename(params['css_file']))
         shutil.copyfile(params['css_file'], params['author_group_css'])
+        params['css_file'] = params['author_group_css']
+    if params['bootstrap_css'] and os.path.exists(params['bootstrap_css']):
+        params['author_group_bootstrap_css'] = os.path.join(static_folder, os.path.basename(params['bootstrap_css']))
+        shutil.copyfile(params['bootstrap_css'], params['author_group_bootstrap_css'])
+        params['bootstrap_css'] = params['author_group_bootstrap_css']
 
     title = params['title']
-    params['css_file'] = params['author_group_css']
 
     # write authors
     _write_entries_group_author(bib_entries)
