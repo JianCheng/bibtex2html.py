@@ -707,6 +707,11 @@ def get_html_disclaimer():
 
     import time, getpass
 
+    log_sign = ''
+    if params['show_author_sign']:
+        log_sign='\n<p>%s denotes co-first authors. %s denotes corresponding authors.</p> \n' % (params['author_sign']['author_first'], params['author_sign']['author_corresponding'])
+
+
     log_disclaimer = """
 <br><br /><br><br />
 <u><strong>Disclaimer:</strong></u><br /><br />
@@ -721,6 +726,7 @@ without the explicit permission of the copyright holder.
 
 </em></p>
 
+%s
 
 Last modifiled:  %s
 
@@ -732,7 +738,7 @@ Last modifiled:  %s
 <a href="https://github.com/JianCheng/bibtex2html.py"><em>bibtex2html.py</em></a>
 </p>
 
-""" % (time.strftime("%Y-%m-%d, %H:%M:%S"), getpass.getuser())
+""" % (log_sign, time.strftime("%Y-%m-%d, %H:%M:%S"), getpass.getuser())
 
     return log_disclaimer
 
