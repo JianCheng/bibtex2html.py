@@ -516,19 +516,8 @@ def get_publisher_shortname_from_entry(entry):
     return pub
 
 
-def get_publisher_countnumber_from_entries(entries):
-    '''Get count numbers from entries for specific journals (conferences).
-
-    Parameters
-    ----------
-        entries :   list of entries
-
-    Returns
-    -------
-        count_name : list of journal (or conference) names
-        count_number: list of numbers
-        count_str :  output string in html format
-    '''
+def _get_count_name_number(entries):
+    '''get a name list and a list of count numbers from entries'''
 
     count_name = []
     for name in params['count_publisher']:
@@ -543,6 +532,32 @@ def get_publisher_countnumber_from_entries(entries):
         for i, name1 in enumerate(count_name):
             if name.lower()==name1.lower():
                 count_number[i] += 1
+
+    count_number2 = []
+    count_name2 = []
+    for name, number in zip(count_name, count_number):
+        if number:
+            count_name2.append(name)
+            count_number2.append(number)
+
+    return count_name2, count_number2
+
+
+def get_publisher_countnumber_from_entries(entries):
+    '''Get count numbers from entries for specific journals (conferences).
+
+    Parameters
+    ----------
+        entries :   list of entries
+
+    Returns
+    -------
+        count_name : list of journal (or conference) names
+        count_number: list of numbers
+        count_str :  output string in html format
+    '''
+
+    count_name, count_number = _get_count_name_number(entries)
 
     if sum(count_number):
         count_str_list=['<p>&#8226;&nbsp;']
@@ -1054,6 +1069,7 @@ def get_categories_of_entries(bib_entries):
 
     return paperlists, seclist, secline
 
+
 def write_entries_by_type(bib_entries, show_total_citation=False):
     '''write bib_entries by types (journal, conference, etc.)'''
 
@@ -1202,7 +1218,7 @@ def write_entries_group(bib_entries):
 
     title = params['title']
 
-    # write authors
+    # write entries selected by authors
     _write_entries_group_author(bib_entries)
     params['dict_title'] = params['dict_title_group']
 
@@ -1215,10 +1231,13 @@ def write_entries_group(bib_entries):
     params['outbibfile'] = os.path.join(biblio_folder, 'complete-bibliography.bib')
     write_entries_to_bibfile(bib_entries)
 
-    # write years
+    # write entries selected by publication venues
+    _write_entries_group_venue(bib_entries)
+
+    # write entries selected by years
     _write_entries_group_year(bib_entries)
 
-    # write categories
+    # write entries selected by categories
     _write_entries_group_category(bib_entries)
 
     # write index.html
@@ -1310,6 +1329,30 @@ def _write_entries_group_index(bib_entries):
     #  f1.write('\n\n\n')
 
 
+    # selection by venue
+    f1.write("""
+<table width="100%%">
+ <tr><td><h2>Selection by selected venues</h2></td></tr>
+</table>
+
+
+<table align="center" cellpadding="3" cellspacing="1">
+<tr align="left" valign="top">\n""")
+
+
+    count_name, count_number = _get_count_name_number(bib_entries)
+    for ii in range(len(count_name)):
+        f1.write('<td><a href="Venue/%s.html"><b>%s</b> (%s)</a></td>\n' % (count_name[ii], count_name[ii], count_number[ii]) )
+
+        if not (ii+1)%3:
+            f1.write('</tr>\n<tr align="left" valign="top">\n')
+
+    f1.write('''</tr>
+</table>
+<br />\n\n\n''')
+
+
+
     # selection by author
     author_list=[None]*26
     for author in params['author_group'].keys():
@@ -1340,8 +1383,6 @@ def _write_entries_group_index(bib_entries):
     f1.write('</table><br />\n\n\n')
 
     f1.write('<table align="center" cellpadding="3" cellspacing="1">\n')
-    #  f1.write('<tr align="left" valign="top">\n')
-
     for ii in range(26):
         if author_list[ii] is not None:
 
@@ -1356,7 +1397,7 @@ def _write_entries_group_index(bib_entries):
                 f1.write('<td>%s<a href="Author/%s">%s <strong>%s</strong></a></td>\n' % (str_tag if jj==0 else '', str_author, author_split[0], author_split[1]) )
 
                 if not (jj+1)%4:
-                    f1.write('</tr>\n<tr align="left" valign="top">\n<td></td>\n')
+                    f1.write('</tr>\n<tr align="left" valign="top">\n')
 
     f1.write('''</tr>
 </table>
@@ -1415,6 +1456,33 @@ def _write_entries_group_year(bib_entries):
         params['title'] = 'Publications of Year %s' % year
 
         write_entries_by_type(entries, show_total_citation=False)
+
+
+def _write_entries_group_venue(bib_entries):
+    '''write bib_entries by types for different publication venue.'''
+
+    folder = os.path.join(params['htmlfile_group'], 'Venue')
+    params['author_group_Venue'] = folder
+    if not os.path.exists(folder):
+        os.mkdir(folder)
+
+    count_name, count_number = _get_count_name_number(bib_entries)
+
+    venue_entries_dict = {}
+    for e in bib_entries:
+        name_e = get_publisher_shortname_from_entry(e)
+        if name_e and name_e in count_name:
+            if name_e in venue_entries_dict:
+                venue_entries_dict[name_e].append(e)
+            else:
+                venue_entries_dict[name_e]=[e]
+
+    for venue, e_list in venue_entries_dict.items():
+        html_file = os.path.join(folder, venue+'.html')
+        params['htmlfile_type'] = html_file
+        params['title'] = 'Publications in %s' % venue
+
+        write_entries_by_type(e_list, show_total_citation=False)
 
 
 def _write_entries_group_author(bib_entries):
