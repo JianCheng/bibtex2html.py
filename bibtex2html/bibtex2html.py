@@ -506,11 +506,11 @@ def get_publisher_shortname_from_entry(entry):
         pub_lower = pub.lower()
         for cp in params['count_publisher']:
             if len(cp)==1:
-                if cp[0].lower() in pub_lower:
+                if cp[0].lower() == pub_lower:
                     return cp[0]
             else:
                 for ii in range(1, len(cp)):
-                    if cp[ii].lower() in pub_lower:
+                    if cp[ii].lower() == pub_lower:
                         return cp[0]
 
     return pub
