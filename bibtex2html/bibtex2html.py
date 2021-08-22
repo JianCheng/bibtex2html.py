@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -349,8 +349,9 @@ def get_title_citation_url(scholarID):
     soup = BeautifulSoup(openurl(url).read(), "lxml")
 
     #  title: [citations, url]
-    title = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_at" })]
-    title_url = [u'https://scholar.google.com/%s' % i['data-href'] for i in soup.findAll("a", { "class" : "gsc_a_at" })]
+    soup_all_gsc_a_at = soup.findAll("a", { "class" : "gsc_a_at" })
+    title = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup_all_gsc_a_at]
+    title_url = [u'https://scholar.google.com/%s' % i['href'] for i in soup_all_gsc_a_at]
     citations = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_ac" })]
 
     dict_out={}
