@@ -1,7 +1,7 @@
 
 # bibtex2html.py
 
-[bibtex2html.py](https://github.com/JianCheng/bibtex2html.py) coverts a bibtex file into an html file or a group of html files.
+[bibtex2html.py](https://github.com/JianCheng/bibtex2html.py) converts a bibtex file into an html file or a group of html files.
 It considers additional fields (e.g., note, code, etc.) in bibtex. 
 It also can show corresponding google scholar citations related with bibtex entries by parsing the google scholar profile. 
 The group mode was inspired by [bibtex2html](http://www-sop.inria.fr/members/Gregoire.Malandain/codes/bibtex2html.html) by Dr. Gregoire Malandain. 
