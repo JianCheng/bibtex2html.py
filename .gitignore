@@ -1,6 +1,11 @@
 
-*.html
+*.pyc
+*.pyo
+*.egg-info
 
-dist
+dist/
+build/
+
+*.html
 
 examples/*/
