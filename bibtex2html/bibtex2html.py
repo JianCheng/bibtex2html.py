@@ -294,14 +294,14 @@ def highlight_author(entry, out_path=''):
                 # last-first.html
                 author_file = os.path.join(params['author_group_Author'], author_split[1] + '-' + author_split[0].replace(' ', '-')+'.html')
                 author_file = os.path.relpath(author_file, os.path.dirname(out_path))
-                authors_new.append('<a target="%s" href="%s"><b>%s</b></a>' % (params['target_link'], author_file, p));
+                authors_new.append('<a target="%s" href="%s"><b>%s</b></a>' % (params['target_link'], author_file, p))
             else:
-                authors_new.append(p);
+                authors_new.append(p)
         else:
             if p in params['author_names_highlighted']:
-                authors_new.append('<b>%s</b>' % p);
+                authors_new.append('<b>%s</b>' % p)
             else:
-                authors_new.append(p);
+                authors_new.append(p)
 
     if params['show_author_sign']:
         authorFirst_names = entry['author_first'].split(', ') if 'author_first' in entry else []
@@ -827,7 +827,7 @@ def clean_entry(entry):
             v = v.replace('--', '&ndash;')
             v = v.replace('-',  '&ndash;')
 
-        entry[k] = v;
+        entry[k] = v
 
 
 def get_entry_output(entry, out_path=''):
@@ -836,7 +836,7 @@ def get_entry_output(entry, out_path=''):
     Parameters
     ----------
         entry    :   a bib entry
-        out_oath :   a path for output file
+        out_path :   a path for output file
 
     Returns
     -------
@@ -1086,7 +1086,7 @@ def write_entries_by_type(bib_entries, show_total_citation=False):
 <br /><br />\n\n''')
 
     if params['show_page_title']:
-        f1.write('<h1>%s</h1>\n\n' % params['title']);
+        f1.write('<h1>%s</h1>\n\n' % params['title'])
 
     if show_total_citation:
         f1.write('%s\n\n' % params['google_scholar_out'][2])
@@ -1111,7 +1111,7 @@ def write_entries_by_type(bib_entries, show_total_citation=False):
     # write list according to publication type
     for papers, sec in zip(paperlists, seclist):
         if papers:
-            f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name(sec), sec));
+            f1.write('<h2><a name="%s"></a>%s</h2>' % (get_anchor_name(sec), sec))
             f1.write('\n%s\n' % ol_1)
             if PY2:
                 papers = sorted(papers, cmp=cmp_by_year)
@@ -1149,7 +1149,7 @@ def write_entries_by_year(bib_entries, show_total_citation=False):
     f1.write(get_html_prelog(params['htmlfile_year']))
 
     if params['show_page_title']:
-        f1.write('<h1>%s</h1>\n\n' % params['title']);
+        f1.write('<h1>%s</h1>\n\n' % params['title'])
 
     if show_total_citation:
         f1.write('%s\n\n' % params['google_scholar_out'][2])
@@ -1171,7 +1171,7 @@ def write_entries_by_year(bib_entries, show_total_citation=False):
         for y in years:
             #  print 'y0=', y
             #  print 'y1=', year_entries_dict[y]
-            f1.write('\n<h2><a name="year%s"></a>%s</h2>\n' % (y,y));
+            f1.write('\n<h2><a name="year%s"></a>%s</h2>\n' % (y,y))
             f1.write('\n%s\n' % ol_1)
             papers = year_entries_dict[y]
             if PY2:
@@ -1258,7 +1258,7 @@ def _write_entries_group_index(bib_entries):
     f1.write(get_html_prelog(html_file))
 
     if params['show_page_title']:
-        f1.write('<h1>%s</h1>\n\n' % params['title']);
+        f1.write('<h1>%s</h1>\n\n' % params['title'])
 
     #  if params['show_count_number']:
     #      _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
@@ -1600,10 +1600,10 @@ def main():
         #  print config.items(param_str)
 
         #  strings, lists, dicts
-        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'author_sign', 'author_group', \
-                         'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted', \
-                         'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', 'icon_size', \
-                         'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding', \
+        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'author_sign', 'author_group',
+                         'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted',
+                         'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', 'icon_size',
+                         'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding',
                          'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css', 'count_publisher', 'selection_and', 'selection_or', 'bulleted_list']:
             if config.has_option(param_str, name_str):
                 params[name_str] = ast.literal_eval(config.get(param_str,name_str))
@@ -1733,12 +1733,12 @@ def main():
             params['google_scholar_out'] = out_scholar[1:]
 
         if params['show_paper_style']=='type':
-            write_entries_by_type(entries_selected, params['show_total_citation']);
+            write_entries_by_type(entries_selected, params['show_total_citation'])
         elif params['show_paper_style']=='year':
-            write_entries_by_year(entries_selected, params['show_total_citation']);
+            write_entries_by_year(entries_selected, params['show_total_citation'])
         elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
-            write_entries_by_type(entries_selected, params['show_total_citation']);
-            write_entries_by_year(entries_selected, params['show_total_citation']);
+            write_entries_by_type(entries_selected, params['show_total_citation'])
+            write_entries_by_year(entries_selected, params['show_total_citation'])
 
         if params['outbibfile']:
             write_entries_to_bibfile(entries_selected)
