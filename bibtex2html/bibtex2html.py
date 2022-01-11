@@ -1593,7 +1593,7 @@ def main():
     params['verbose'] = _verbose
 
 
-    config = configparser.SafeConfigParser()
+    config = configparser.ConfigParser()
     if args['--conf']:
         param_str = 'params'
         config.read(_conffile)
