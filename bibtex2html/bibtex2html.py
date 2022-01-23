@@ -1736,24 +1736,19 @@ def main():
 
 
     entries_selected=[]
-    entries_selected_outbib=[]
     for e in bib_entries:
+
+        if _verbose>=2:
+            print ('e before clean=', e)
+
+        #  clean entry for output
+        clean_entry(e)
 
         if is_entry_selected(e):
             if len(params['author_group'])==0 or len(params['author_group'])>0 and is_entry_selected(e, selection_or={'author': params['author_group_authors']}):
 
-                if _verbose>=2:
-                    print ('e before clean=', e)
-
-                #  clean entry for output
-                clean_entry(e)
-
                 #  fill some empty fields
                 add_empty_fields_in_entry(e)
-
-                # do not add shortname to output bib
-                if params['outbibfile']:
-                    entries_selected_outbib.append(e)
 
                 # add short name
                 add_shortname_in_entry(e)
@@ -1783,7 +1778,7 @@ def main():
             write_entries_by_year(entries_selected, params['show_total_citation'])
 
     if params['outbibfile']:
-        write_entries_to_bibfile(entries_selected_outbib)
+        write_entries_to_bibfile(entries_selected)
 
 
 if __name__ == '__main__':
