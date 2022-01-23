@@ -1759,6 +1759,10 @@ def main():
                 entries_selected.append(e)
 
 
+    if params['outbibfile']:
+        write_entries_to_bibfile(entries_selected)
+
+
     if len(params['author_group']):
 
         write_entries_group(entries_selected)
@@ -1776,9 +1780,6 @@ def main():
         elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
             write_entries_by_type(entries_selected, params['show_total_citation'])
             write_entries_by_year(entries_selected, params['show_total_citation'])
-
-    if params['outbibfile']:
-        write_entries_to_bibfile(entries_selected)
 
 
 if __name__ == '__main__':
