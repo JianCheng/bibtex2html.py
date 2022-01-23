@@ -337,6 +337,13 @@ def highlight_publisher(publisher):
             return publisher
 
 
+def remove_shorname_in_publisher(publisher):
+    '''Remove shortname for journals.'''
+
+    dem_1 = publisher.find('(')
+    return publisher[:dem_1].strip() if dem_1>0 else publisher
+
+
 def get_title_citation_url(scholarID):
     '''get a dictionary {title: [citations, url]}, total citations, h-index from a given googlescholar id'''
 
@@ -427,6 +434,77 @@ def get_wwwlink_from_entry(entry):
         return ''
 
 
+def get_bibtex_from_entry(entry, comma_to_and=False):
+    '''Get bibtex string from an entry. Remove some non-standard fields.'''
+
+    entry2 = entry.copy()
+
+    add_empty_fields_in_entry(entry2)
+
+    if comma_to_and:
+        authors = entry2['author'].split(', ')
+        entry2['author'] = ' and '.join(authors)
+
+    e = {}
+    keep_list = ['ENTRYTYPE', 'ID']
+    for i_str in entry2.keys():
+        if i_str in params['bibtex_show_list'] or i_str in keep_list:
+            e[i_str] = entry2[i_str]
+
+    if 'journal' in e and e['journal']:
+        e['journal'] = remove_shorname_in_publisher(e['journal'])
+
+    bibdata = bibtexparser.bibdatabase.BibDatabase()
+    bibdata.entries = [e]
+    bibstr = bibtexparser.dumps(bibdata)
+    bibstr = remove_empty_lines(bibstr)
+
+    if params['verbose']>=2:
+        print('bibstr=%s' % bibstr)
+
+    return bibstr
+
+
+def get_publisher_shortname_from_entry(entry):
+    '''Get shortname for journals or conferences from an entry.
+
+    Parameters
+    ----------
+        entry :   a bib entry
+
+    Returns
+    -------
+        pub    : shortname of publication
+        in_pub : True: shorname is already in publication; False: shortname needs to be added
+    '''
+
+
+    pub = ''
+    if 'journal' in entry:
+        pub = entry['journal']
+    elif 'booktitle' in entry:
+        pub = entry['booktitle']
+
+    dem_1 = pub.find('(')
+    if dem_1>=0:
+        dem_2 = pub.find(')')
+        dem_3 = pub.find("'")
+        dem = dem_2 if dem_3<0 else dem_3
+        return pub[dem_1+1:dem], True
+    else:
+        pub_lower = pub.lower()
+        for cp in params['count_publisher']:
+            if len(cp)==1:
+                if cp[0].lower() == pub_lower:
+                    return cp[0], True
+            else:
+                for ii in range(1, len(cp)):
+                    if cp[ii].lower() == pub_lower:
+                        return cp[0], False
+
+    return pub, True
+
+
 def get_journal_from_entry(entry):
     '''get journal from entry (keys: journal, eprint)'''
 
@@ -460,61 +538,15 @@ def add_empty_fields_in_entry(entry):
             entry['journal'] = journal
 
 
-def get_bibtex_from_entry(entry, comma_to_and=False):
-    '''Get bibtex string from an entry. Remove some non-standard fields.'''
+def add_shortname_in_entry(entry):
+    '''add shortname for journals and conferences if there is no one.'''
 
-    entry2 = entry.copy()
-
-    add_empty_fields_in_entry(entry2)
-
-    if comma_to_and:
-        authors = entry2['author'].split(', ')
-        entry2['author'] = ' and '.join(authors)
-
-    entry_standard = {}
-    keep_list = ['ENTRYTYPE', 'ID']
-    for i_str in entry2.keys():
-        if i_str in params['bibtex_show_list'] or i_str in keep_list:
-            entry_standard[i_str] = entry2[i_str]
-
-    bibdata = bibtexparser.bibdatabase.BibDatabase()
-    bibdata.entries = [entry_standard]
-    bibstr = bibtexparser.dumps(bibdata)
-    bibstr = remove_empty_lines(bibstr)
-
-    if params['verbose']>=2:
-        print('bibstr=%s' % bibstr)
-
-    return bibstr
-
-
-def get_publisher_shortname_from_entry(entry):
-    '''Get shortname for journals or conferences from an entry'''
-
-    pub = ''
-    if 'journal' in entry:
-        pub = entry['journal']
-    elif 'booktitle' in entry:
-        pub = entry['booktitle']
-
-    dem_1 = pub.find('(')
-    if dem_1>=0:
-        dem_2 = pub.find(')')
-        dem_3 = pub.find("'")
-        dem = dem_2 if dem_3<0 else dem_3
-        return pub[dem_1+1:dem]
-    else:
-        pub_lower = pub.lower()
-        for cp in params['count_publisher']:
-            if len(cp)==1:
-                if cp[0].lower() == pub_lower:
-                    return cp[0]
-            else:
-                for ii in range(1, len(cp)):
-                    if cp[ii].lower() == pub_lower:
-                        return cp[0]
-
-    return pub
+    shortname, has_sname = get_publisher_shortname_from_entry(entry)
+    if shortname and not has_sname:
+        if 'journal' in entry and entry['journal']:
+            entry['journal'] = ''.join([entry['journal'], ' (', shortname, ')'])
+        if 'booktitle' in entry and entry['booktitle']:
+            entry['booktitle'] = ''.join([entry['booktitle'], ' (', shortname, ')'])
 
 
 def _get_count_name_number(entries):
@@ -529,7 +561,7 @@ def _get_count_name_number(entries):
     count_number = [0]*len(count_name)
 
     for e in entries:
-        name = get_publisher_shortname_from_entry(e)
+        name, _ = get_publisher_shortname_from_entry(e)
         for i, name1 in enumerate(count_name):
             if name.lower()==name1.lower():
                 count_number[i] += 1
@@ -1471,7 +1503,7 @@ def _write_entries_group_venue(bib_entries):
 
     venue_entries_dict = {}
     for e in bib_entries:
-        name_e = get_publisher_shortname_from_entry(e)
+        name_e, _ = get_publisher_shortname_from_entry(e)
         if name_e and name_e in count_name:
             if name_e in venue_entries_dict:
                 venue_entries_dict[name_e].append(e)
@@ -1704,21 +1736,31 @@ def main():
 
 
     entries_selected=[]
+    entries_selected_outbib=[]
     for e in bib_entries:
-        if _verbose>=2:
-            print ('e before clean=', e)
-
-        #  clean entry for output
-        clean_entry(e)
-
-        #  fill some empty fields
-        add_empty_fields_in_entry(e)
-
-        if _verbose>=2:
-            print ('e after clean =', e)
 
         if is_entry_selected(e):
             if len(params['author_group'])==0 or len(params['author_group'])>0 and is_entry_selected(e, selection_or={'author': params['author_group_authors']}):
+
+                if _verbose>=2:
+                    print ('e before clean=', e)
+
+                #  clean entry for output
+                clean_entry(e)
+
+                #  fill some empty fields
+                add_empty_fields_in_entry(e)
+
+                # do not add shortname to output bib
+                if params['outbibfile']:
+                    entries_selected_outbib.append(e)
+
+                # add short name
+                add_shortname_in_entry(e)
+
+                if _verbose>=2:
+                    print ('e after clean =', e)
+
                 entries_selected.append(e)
 
 
@@ -1740,8 +1782,8 @@ def main():
             write_entries_by_type(entries_selected, params['show_total_citation'])
             write_entries_by_year(entries_selected, params['show_total_citation'])
 
-        if params['outbibfile']:
-            write_entries_to_bibfile(entries_selected)
+    if params['outbibfile']:
+        write_entries_to_bibfile(entries_selected_outbib)
 
 
 if __name__ == '__main__':
