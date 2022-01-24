@@ -454,6 +454,9 @@ def get_bibtex_from_entry(entry, comma_to_and=False):
     if 'journal' in e and e['journal']:
         e['journal'] = remove_shorname_in_publisher(e['journal'])
 
+    if 'pages' in e and e['pages']:
+        e['pages'] = e['pages'].replace('&ndash;', '-')
+
     bibdata = bibtexparser.bibdatabase.BibDatabase()
     bibdata.entries = [e]
     bibstr = bibtexparser.dumps(bibdata)
