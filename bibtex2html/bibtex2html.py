@@ -49,6 +49,7 @@ else:
     import configparser
     import functools
 
+
     def unicode(ss):
         return ss
 
@@ -66,7 +67,6 @@ from docopt import docopt
 
 import ast
 
-
 # output html encoding
 #  encoding = 'UTF-8'
 #  encoding = 'ISO-8859-1'
@@ -81,9 +81,11 @@ params['encoding'] = 'UTF-8'
 params['show_paper_style'] = 'type'
 
 params['journal_shortname_highlighted'] = [u'TMI', u'HBM', u'MIA', u'MedIA', u'TIP', u'TPAMI', u'IJCV', u'MRM']
-params['journal_fullname_highlighted'] = [u'Nature Methods', u'NeuroImage', u'Medical Image Analysis', u'IEEE Transactions on Medical Imaging',
-                               u'IEEE Transactions on Pattern Analysis and Machine Intelligence', u'Medical Physics', u'Magnetic Resonance in Medicine',
-                               u'SIAM Journal on Imaging Sciences']
+params['journal_fullname_highlighted'] = [u'Nature Methods', u'NeuroImage', u'Medical Image Analysis',
+                                          u'IEEE Transactions on Medical Imaging',
+                                          u'IEEE Transactions on Pattern Analysis and Machine Intelligence',
+                                          u'Medical Physics', u'Magnetic Resonance in Medicine',
+                                          u'SIAM Journal on Imaging Sciences']
 params['conference_shortname_highlighted'] = [u'MICCAI', u'IPMI', u'CVPR', u'NIPS', u'ICCV', u'ECCV']
 params['author_names_highlighted'] = []
 
@@ -118,7 +120,7 @@ params['show_citation'] = 'no'
 # show total citation by googlescholarID using bs
 params['show_total_citation'] = False
 # obtained by googlescholarID by using bs
-params['dict_title'] = {} # dict of papers:  {title: [citations, url]}
+params['dict_title'] = {}  # dict of papers:  {title: [citations, url]}
 params['google_scholar_out'] = ()
 
 params['show_page_title'] = True
@@ -141,7 +143,6 @@ params['target_link'] = u'_self'
 # target attr for citations
 params['target_link_citation'] = u'_blank'
 
-
 #  If false, show multiple lines
 params['single_line'] = True
 
@@ -158,12 +159,15 @@ params['type_conference_paper'] = [u'inproceedings']
 params['type_conference_abstract'] = [u'conference']
 
 # bibtex download fields
-params['bibtex_fields_download'] = ['arxiv', 'project', 'slides', 'poster', 'video', 'code', 'software', 'data', 'media']
+params['bibtex_fields_download'] = ['arxiv', 'project', 'slides', 'poster', 'video', 'code', 'software', 'data',
+                                    'media']
 # bibtex note fields
 params['bibtex_fields_note'] = ['note', 'hlnote', 'hlnote2']
 # show bibtex with given fields
-params['bibtex_show_list'] = ['author', 'title', 'journal', 'booktitle', 'year', 'volume', 'number', 'pages', 'month', 'publisher', 'organization', 'school', 'address', 'edition',
-                              'editor', 'institution', 'chapter', 'series', 'pdf', 'doi', 'url', 'hal_id', 'eprint', 'archiveprefix', 'primaryclass']
+params['bibtex_show_list'] = ['author', 'title', 'journal', 'booktitle', 'year', 'volume', 'number', 'pages', 'month',
+                              'publisher', 'organization', 'school', 'address', 'edition',
+                              'editor', 'institution', 'chapter', 'series', 'pdf', 'doi', 'url', 'hal_id', 'eprint',
+                              'archiveprefix', 'primaryclass']
 
 # print signs for first authors, corresponding authors.
 params['show_author_sign'] = False
@@ -174,21 +178,20 @@ params['add_blank_line_after_item'] = False
 # customized bootstrap if provided
 params['bootstrap_css'] = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'
 
-
 # regular expression for \emph{...{...}*...}
 emph = re.compile(u'''
             \\\\emph{                       # \emph{
             (?P<emph_text>([^{}]*{[^{}]*})*.*?)  # (...{...})*...
-            }''', re.VERBOSE)               # }
+            }''', re.VERBOSE)  # }
 
 
 def remove_empty_lines(strIn):
-    '''Remove empty lines from a string'''
+    """Remove empty lines from a string"""
     return os.linesep.join([s for s in strIn.splitlines() if s.strip()])
 
 
 def is_author_selected(entry, names, select_field=''):
-    '''Return true if the author list of the entry is selected.
+    """Return true if the author list of the entry is selected.
 
     Parameters
     ----------
@@ -199,11 +202,11 @@ def is_author_selected(entry, names, select_field=''):
     Returns
     -------
         is_selected : boolean
-    '''
+    """
 
     author_names = entry['author'].split(', ')
     k = 'author_' + select_field
-    if select_field=='first':
+    if select_field == 'first':
         if author_names[0] in names:
             return True
         elif k in entry:
@@ -212,7 +215,7 @@ def is_author_selected(entry, names, select_field=''):
                 if name in names:
                     return True
         return False
-    elif select_field=='corresponding':
+    elif select_field == 'corresponding':
         if not k in entry:
             return False
         else:
@@ -221,38 +224,40 @@ def is_author_selected(entry, names, select_field=''):
                 if name in names:
                     return True
         return False
-    elif select_field=='':
+    elif select_field == '':
         return is_author_selected(entry, names, 'first') or is_author_selected(entry, names, 'corresponding')
     else:
         raise ValueError("Wrong select_field ('first', 'corresponding', or '')!")
 
 
 def cmp_by_type(y, x):
-    '''sort entry by type'''
+    """sort entry by type"""
 
-    if x['ENTRYTYPE']!=y['ENTRYTYPE']:
-        if y['ENTRYTYPE']=='phdthesis': return -1
+    if x['ENTRYTYPE'] != y['ENTRYTYPE']:
+        if y['ENTRYTYPE'] == 'phdthesis': return -1
         if y['ENTRYTYPE'] in ['inbook', 'book'] and x['ENTRYTYPE'] not in ['phdthesis']: return -1
-        if y['ENTRYTYPE']=='article' and x['ENTRYTYPE'] not in ['phdthesis', 'book', 'inbook']: return -1
-        if y['ENTRYTYPE']=='inproceedings' and x['ENTRYTYPE'] not in ['phdthesis', 'book', 'inbook', 'article']: return -1
-        if y['ENTRYTYPE']=='conferences' and x['ENTRYTYPE'] not in ['phdthesis', 'book', 'inbook', 'article', 'inproceedings']: return -1
+        if y['ENTRYTYPE'] == 'article' and x['ENTRYTYPE'] not in ['phdthesis', 'book', 'inbook']: return -1
+        if y['ENTRYTYPE'] == 'inproceedings' and x['ENTRYTYPE'] not in ['phdthesis', 'book', 'inbook',
+                                                                        'article']: return -1
+        if y['ENTRYTYPE'] == 'conferences' and x['ENTRYTYPE'] not in ['phdthesis', 'book', 'inbook', 'article',
+                                                                      'inproceedings']: return -1
         return 1
     else:
-        if x['ENTRYTYPE']=='article':
+        if x['ENTRYTYPE'] == 'article':
             x_hl, y_hl = False, False
             for word in params['journal_shortname_highlighted']:
-                if x['journal'].find('(%s)' % word)>=0: x_hl=True
-                if y['journal'].find('(%s)' % word)>=0: y_hl=True
+                if x['journal'].find('(%s)' % word) >= 0:  x_hl = True
+                if y['journal'].find('(%s)' % word) >= 0:  y_hl = True
             for word in params['journal_fullname_highlighted_lower']:
-                if not x_hl and x['journal'].lower().find(word)>=0: x_hl=True
-                if not y_hl and y['journal'].lower().find(word)>=0: y_hl=True
+                if not x_hl and x['journal'].lower().find(word) >= 0:  x_hl = True
+                if not y_hl and y['journal'].lower().find(word) >= 0:  y_hl = True
             if x_hl and not y_hl:  return 1
             if not x_hl and y_hl:  return -1
         elif x['ENTRYTYPE'] in params['type_conference_paper']:
             x_hl, y_hl = False, False
             for word in params['conference_shortname_highlighted']:
-                if x['booktitle'].find(word+"'")>=0: x_hl=True
-                if y['booktitle'].find(word+"'")>=0: y_hl=True
+                if x['booktitle'].find(word + "'") >= 0:  x_hl = True
+                if y['booktitle'].find(word + "'") >= 0:  y_hl = True
             if x_hl and not y_hl:  return 1
             if not x_hl and y_hl:  return -1
 
@@ -267,10 +272,10 @@ def cmp_by_type(y, x):
 
 
 def cmp_by_year(y, x):
-    '''sort entry by year'''
+    """sort entry by year"""
 
     if x['year'].isdigit() and y['year'].isdigit():
-        return int(x['year']) - int(y['year']) if int(x['year']) != int(y['year']) else cmp_by_type(y,x)
+        return int(x['year']) - int(y['year']) if int(x['year']) != int(y['year']) else cmp_by_type(y, x)
     elif x['year'].isdigit() and not y['year'].isdigit():
         return -1
     elif not x['year'].isdigit() and y['year'].isdigit():
@@ -289,10 +294,11 @@ def highlight_author(entry, out_path=''):
         if len(params['author_group']):
             if p in params['author_group'].keys():
                 author_split = p.rsplit(' ', 1)
-                if len(author_split)!=2:
+                if len(author_split) != 2:
                     raise ValueError('author_split should have 2 elements for first and last name')
                 # last-first.html
-                author_file = os.path.join(params['author_group_Author'], author_split[1] + '-' + author_split[0].replace(' ', '-')+'.html')
+                author_file = os.path.join(params['author_group_Author'],
+                                           author_split[1] + '-' + author_split[0].replace(' ', '-') + '.html')
                 author_file = os.path.relpath(author_file, os.path.dirname(out_path))
                 authors_new.append('<a target="%s" href="%s"><b>%s</b></a>' % (params['target_link'], author_file, p))
             else:
@@ -325,12 +331,12 @@ def highlight_publisher(publisher):
         return '<b>%s</b>' % publisher
     else:
         dem_1 = publisher.find('(')
-        if dem_1>=0:
+        if dem_1 >= 0:
             dem_2 = publisher.find(')')
             dem_3 = publisher.find("'")
-            dem = dem_2 if dem_3<0 else dem_3
-            if publisher[dem_1+1:dem] in words_highlighted:
-                return '%s<b>%s</b>%s' % (publisher[:dem_1+1], publisher[dem_1+1:dem], publisher[dem:])
+            dem = dem_2 if dem_3 < 0 else dem_3
+            if publisher[dem_1 + 1:dem] in words_highlighted:
+                return '%s<b>%s</b>%s' % (publisher[:dem_1 + 1], publisher[dem_1 + 1:dem], publisher[dem:])
             else:
                 return publisher
         else:
@@ -338,16 +344,16 @@ def highlight_publisher(publisher):
 
 
 def remove_shorname_in_publisher(publisher):
-    '''Remove shortname for journals.'''
+    """Remove shortname for journals."""
 
     dem_1 = publisher.find('(')
-    return publisher[:dem_1].strip() if dem_1>0 else publisher
+    return publisher[:dem_1].strip() if dem_1 > 0 else publisher
 
 
 def get_title_citation_url(scholarID):
-    '''get a dictionary {title: [citations, url]}, total citations, h-index from a given googlescholar id'''
+    """get a dictionary {title: [citations, url]}, total citations, h-index from a given googlescholar id"""
 
-    if scholarID==None or scholarID==u'':
+    if scholarID is None or scholarID == u'':
         raise ValueError("no googlescholarID")
 
     openurl = FancyURLopener().open
@@ -356,60 +362,61 @@ def get_title_citation_url(scholarID):
     soup = BeautifulSoup(openurl(url).read(), "lxml")
 
     #  title: [citations, url]
-    soup_all_gsc_a_at = soup.findAll("a", { "class" : "gsc_a_at" })
+    soup_all_gsc_a_at = soup.findAll("a", {"class": "gsc_a_at"})
     title = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup_all_gsc_a_at]
     title_url = [u'https://scholar.google.com/%s' % i['href'] for i in soup_all_gsc_a_at]
-    citations = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", { "class" : "gsc_a_ac" })]
+    citations = [unicode(u''.join(i.findAll(text=True))).strip() for i in soup.findAll("a", {"class": "gsc_a_ac"})]
 
-    dict_out={}
+    dict_out = {}
     for i, name in enumerate(title):
-        dict_out[name.lower()] = [citations[i] if citations[i]!=u'' else u'0', title_url[i]]
+        dict_out[name.lower()] = [citations[i] if citations[i] != u'' else u'0', title_url[i]]
 
     #  (total_citations, h-index, str_out)
-    career = soup.findAll("td", { "class" : "gsc_rsb_std" }, text=True)
+    career = soup.findAll("td", {"class": "gsc_rsb_std"}, text=True)
     citations = unicode(career[0].get_text())
     hindex = unicode(career[2].get_text())
 
-    str_out = '''<p><big>&#8226;&nbsp;<b>Total Citations</b>: <a target="%s" href='%s'>%s</a> &#8226;&nbsp;  <b>H-Index</b>: <a target="%s" href='%s'>%s</a></big></p>''' % (params['target_link_citation'], url0, citations, params['target_link_citation'], url0, hindex)
+    str_out = '''<p><big>&#8226;&nbsp;<b>Total Citations</b>: <a target="%s" href='%s'>%s</a> &#8226;&nbsp;  <b>H-Index</b>: <a target="%s" href='%s'>%s</a></big></p>''' % (
+        params['target_link_citation'], url0, citations, params['target_link_citation'], url0, hindex)
 
     return dict_out, citations, hindex, str_out
 
 
 def get_arxivID_from_entry(entry):
-    '''get arxiv id'''
+    """get arxiv id"""
 
-    id = ''
+    arxivid = ''
     if 'eprint' in entry or 'arxiv' in entry:
         word = 'eprint' if 'eprint' in entry else 'arxiv'
         w = entry[word].lower()
         pos = w.find('arxiv:')
-        if pos>=0:
-            id = w[pos+6:]
+        if pos >= 0:
+            arxivid = w[pos + 6:]
 
     elif 'journal' in entry:
         journal = entry['journal'].lower()
         words = journal.split()
         for w in words:
             pos = w.find('arxiv:')
-            if pos>=0:
-                id = w[pos+6:]
-                return id
+            if pos >= 0:
+                arxivid = w[pos + 6:]
+                return arxivid
 
-    return id
+    return arxivid
 
 
 def get_arxivlink_from_entry(entry):
-    '''get arxiv link'''
+    """get arxiv link"""
 
     return 'https://arxiv.org/abs/%s' % get_arxivID_from_entry(entry)
 
 
 def get_pdflink_from_entry(entry):
-    '''get pdf link from bib entry (keys: pdf, hal_id)'''
+    """get pdf link from bib entry (keys: pdf, hal_id)"""
 
-    if 'pdf' in entry and entry['pdf']!='':
+    if 'pdf' in entry and entry['pdf'] != '':
         return entry['pdf']
-    elif get_arxivID_from_entry(entry)!='':
+    elif get_arxivID_from_entry(entry) != '':
         return 'https://arxiv.org/pdf/%s.pdf' % get_arxivID_from_entry(entry)
     elif 'hal_id' in entry:
         return 'https://hal.archives-ouvertes.fr/%s/document' % entry['hal_id']
@@ -418,15 +425,15 @@ def get_pdflink_from_entry(entry):
 
 
 def get_wwwlink_from_entry(entry):
-    '''get website link from bib entry (keys: url, www, doi, hal_id)'''
+    """get website link from bib entry (keys: url, www, doi, hal_id)"""
 
-    if 'url' in entry and entry['url']!='':
+    if 'url' in entry and entry['url'] != '':
         return entry['url']
     elif 'www' in entry:
         return entry['www']
     elif 'doi' in entry:
         return 'https://dx.doi.org/%s' % entry['doi']
-    elif get_arxivID_from_entry(entry)!='':
+    elif get_arxivID_from_entry(entry) != '':
         return 'https://arxiv.org/abs/%s' % get_arxivID_from_entry(entry)
     elif 'hal_id' in entry:
         return 'https://hal.archives-ouvertes.fr/%s' % entry['hal_id']
@@ -435,7 +442,7 @@ def get_wwwlink_from_entry(entry):
 
 
 def get_bibtex_from_entry(entry, comma_to_and=False):
-    '''Get bibtex string from an entry. Remove some non-standard fields.'''
+    """Get bibtex string from an entry. Remove some non-standard fields."""
 
     entry2 = entry.copy()
 
@@ -462,14 +469,14 @@ def get_bibtex_from_entry(entry, comma_to_and=False):
     bibstr = bibtexparser.dumps(bibdata)
     bibstr = remove_empty_lines(bibstr)
 
-    if params['verbose']>=2:
+    if params['verbose'] >= 2:
         print('bibstr=%s' % bibstr)
 
     return bibstr
 
 
 def get_publisher_shortname_from_entry(entry):
-    '''Get shortname for journals or conferences from an entry.
+    """Get shortname for journals or conferences from an entry.
 
     Parameters
     ----------
@@ -479,8 +486,7 @@ def get_publisher_shortname_from_entry(entry):
     -------
         pub    : shortname of publication
         in_pub : True: shorname is already in publication; False: shortname needs to be added
-    '''
-
+    """
 
     pub = ''
     if 'journal' in entry:
@@ -489,15 +495,15 @@ def get_publisher_shortname_from_entry(entry):
         pub = entry['booktitle']
 
     dem_1 = pub.find('(')
-    if dem_1>=0:
+    if dem_1 >= 0:
         dem_2 = pub.find(')')
         dem_3 = pub.find("'")
-        dem = dem_2 if dem_3<0 else dem_3
-        return pub[dem_1+1:dem], True
+        dem = dem_2 if dem_3 < 0 else dem_3
+        return pub[dem_1 + 1:dem], True
     else:
         pub_lower = pub.lower()
         for cp in params['count_publisher']:
-            if len(cp)==1:
+            if len(cp) == 1:
                 if cp[0].lower() == pub_lower:
                     return cp[0], True
             else:
@@ -509,9 +515,9 @@ def get_publisher_shortname_from_entry(entry):
 
 
 def get_journal_from_entry(entry):
-    '''get journal from entry (keys: journal, eprint)'''
+    """get journal from entry (keys: journal, eprint)"""
 
-    if 'journal' in entry and entry['journal']!='':
+    if 'journal' in entry and entry['journal'] != '':
         return entry['journal']
     elif 'eprint' in entry:
         return entry['eprint']
@@ -520,29 +526,29 @@ def get_journal_from_entry(entry):
 
 
 def add_empty_fields_in_entry(entry):
-    '''add some fields using other fields'''
+    """add some fields using other fields"""
 
     #  add pdf_link from other keys
-    if not 'pdf' in entry or entry['pdf']=='':
+    if not 'pdf' in entry or entry['pdf'] == '':
         pdf_link = get_pdflink_from_entry(entry)
-        if pdf_link!='':
+        if pdf_link != '':
             entry['pdf'] = pdf_link
 
     #  add url from other keys
-    if not 'url' in entry or entry['url']=='':
+    if not 'url' in entry or entry['url'] == '':
         www_link = get_wwwlink_from_entry(entry)
-        if www_link!='':
+        if www_link != '':
             entry['url'] = www_link
 
     #  add journal from other keys
-    if not 'journal' in entry or entry['journal']=='':
+    if not 'journal' in entry or entry['journal'] == '':
         journal = get_journal_from_entry(entry)
-        if journal!='':
+        if journal != '':
             entry['journal'] = journal
 
 
 def add_shortname_in_entry(entry):
-    '''add shortname for journals and conferences if there is no one.'''
+    """add shortname for journals and conferences if there is no one."""
 
     shortname, has_sname = get_publisher_shortname_from_entry(entry)
     if shortname and not has_sname:
@@ -553,20 +559,20 @@ def add_shortname_in_entry(entry):
 
 
 def _get_count_name_number(entries):
-    '''get a name list and a list of count numbers from entries'''
+    """get a name list and a list of count numbers from entries"""
 
     count_name = []
     for name in params['count_publisher']:
-        if type(name)==list:
+        if type(name) == list:
             count_name.append(name[0])
         else:
             count_name.append(name)
-    count_number = [0]*len(count_name)
+    count_number = [0] * len(count_name)
 
     for e in entries:
         name, _ = get_publisher_shortname_from_entry(e)
         for i, name1 in enumerate(count_name):
-            if name.lower()==name1.lower():
+            if name.lower() == name1.lower():
                 count_number[i] += 1
 
     count_number2 = []
@@ -580,7 +586,7 @@ def _get_count_name_number(entries):
 
 
 def get_publisher_countnumber_from_entries(entries):
-    '''Get count numbers from entries for specific journals (conferences).
+    """Get count numbers from entries for specific journals (conferences).
 
     Parameters
     ----------
@@ -591,14 +597,14 @@ def get_publisher_countnumber_from_entries(entries):
         count_name : list of journal (or conference) names
         count_number: list of numbers
         count_str :  output string in html format
-    '''
+    """
 
     count_name, count_number = _get_count_name_number(entries)
 
     if sum(count_number):
-        count_str_list=['<p>&#8226;&nbsp;']
+        count_str_list = ['<p>&#8226;&nbsp;']
         for name, num in zip(count_name, count_number):
-            if num>0:
+            if num > 0:
                 str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
                 count_str_list.append(str_count)
         count_str_list.append('</p>')
@@ -610,7 +616,7 @@ def get_publisher_countnumber_from_entries(entries):
 
 
 def is_entry_selected_by_key(entry, k, v):
-    '''return true if entry is selected by a given key and value list
+    """return true if entry is selected by a given key and value list
 
     Parameters
     ----------
@@ -621,7 +627,7 @@ def is_entry_selected_by_key(entry, k, v):
     Returns
     -------
         output : True if it is selected
-    '''
+    """
 
     if k == 'year':
         return int(entry[k]) in v
@@ -631,18 +637,16 @@ def is_entry_selected_by_key(entry, k, v):
             if name in author_names:
                 return True
         return False
-    elif k=='author_first':
+    elif k == 'author_first':
         return is_author_selected(entry, v, 'first')
-    elif k =='author_corresponding':
+    elif k == 'author_corresponding':
         return is_author_selected(entry, v, 'corresponding')
     else:
         raise ValueError('Wrong selection keys!')
 
-    return True
-
 
 def is_entry_selected(entry, selection_and=None, selection_or=None):
-    '''return true if entry is selected
+    """return true if entry is selected
 
     Parameters
     ----------
@@ -653,7 +657,7 @@ def is_entry_selected(entry, selection_and=None, selection_or=None):
     Returns
     -------
         output : True if it is selected
-    '''
+    """
 
     if selection_and is None:
         selection_and = params['selection_and']
@@ -680,29 +684,29 @@ def is_entry_selected(entry, selection_and=None, selection_or=None):
 
 
 def get_anchor_name(name):
-    '''get anchor from a string'''
+    """get anchor from a string"""
 
     if name.isdigit():
-        return 'year'+ name
+        return 'year' + name
     else:
         return name.lower().replace(' ', '-')
 
 
 def get_bulleted_list_str():
-    '''get html string for bulleted list'''
+    """get html string for bulleted list"""
 
-    if params['bulleted_list']=='ol':
+    if params['bulleted_list'] == 'ol':
         return '<ol>', '</ol>'
-    elif params['bulleted_list']=='ul':
+    elif params['bulleted_list'] == 'ul':
         return '<ul>', '</ul>'
-    elif params['bulleted_list']=='ol_reversed':
+    elif params['bulleted_list'] == 'ol_reversed':
         return '<ol reversed>', '</ol>'
     else:
         raise ValueError("Wrong params['bulleted_list']. Must be 'ol', 'ul', 'ol_reversed'")
 
 
 def get_html_prelog(out_path=''):
-    '''get prelog in html.'''
+    """get prelog in html."""
 
     css_file = os.path.relpath(params['css_file'], os.path.dirname(out_path)) if params['css_file'] and os.path.exists(params['css_file']) else ''
     bootstrap_css_file = os.path.relpath(params['bootstrap_css'], os.path.dirname(out_path)) if params['bootstrap_css'] and os.path.exists(params['bootstrap_css']) else params['bootstrap_css']
@@ -748,20 +752,21 @@ def get_html_prelog(out_path=''):
 
     <div id="content">
     <br>
-    """ % (params['encoding'], params['title'], bootstrap_css_file, params['scholar.js'] if params['show_citation']=='scholar.js' else '', css_file)
+    """ % (params['encoding'], params['title'], bootstrap_css_file,
+           params['scholar.js'] if params['show_citation'] == 'scholar.js' else '', css_file)
 
     return prelog
 
 
 def get_html_disclaimer():
-    '''return str of disclaimer'''
+    """return str of disclaimer"""
 
     import time, getpass
 
     log_sign = ''
     if params['show_author_sign']:
-        log_sign='\n<p>%s denotes co-first authors. %s denotes corresponding authors.</p> \n' % (params['author_sign']['author_first'], params['author_sign']['author_corresponding'])
-
+        log_sign = '\n<p>%s denotes co-first authors. %s denotes corresponding authors.</p> \n' % (
+        params['author_sign']['author_first'], params['author_sign']['author_corresponding'])
 
     log_disclaimer = """
 <br><br /><br><br />
@@ -794,9 +799,8 @@ Last modifiled:  %s
     return log_disclaimer
 
 
-
 def clean_entry(entry):
-    '''Clean up an entry'''
+    """Clean up an entry"""
 
     for k, v in entry.items():
 
@@ -806,14 +810,14 @@ def clean_entry(entry):
 
         # replace special characters - add more if necessary
         v = v.replace('\\AE', u'Æ')
-        v = v.replace('\\O',  u'Ø')
+        v = v.replace('\\O', u'Ø')
         v = v.replace('\\AA', u'Å')
         v = v.replace('\\ae', u'æ')
-        v = v.replace('\\o',  u'ø')
+        v = v.replace('\\o', u'ø')
         v = v.replace('\\aa', u'å')
         v = v.replace('\\\'a', '&aacute;')
         v = v.replace('\\\'e', '&eacute;')
-        v = v.replace('\\c{c}' , '&ccedil;')
+        v = v.replace('\\c{c}', '&ccedil;')
 
         # fix \emph in title
         if k == 'title':
@@ -826,7 +830,7 @@ def clean_entry(entry):
             v = v.replace('"', '')
 
         # remove trailing comma and dot
-        if len(v)>0:
+        if len(v) > 0:
             if v[-1] == ',':
                 v = v[:-1]
 
@@ -844,11 +848,11 @@ def clean_entry(entry):
 
             # reverse first and surname
             for i, a in enumerate(authors):
-                #print a + "\n"
-                #surname =
+                # print a + "\n"
+                # surname =
                 namearray = a.split('&nbsp;')
                 surname = namearray[0]
-                if surname.find(',') >=0:
+                if surname.find(',') >= 0:
                     surname = surname.replace(',', '')
                     firstname = ' '.join(namearray[1:])
                     authors[i] = firstname + " " + surname
@@ -860,7 +864,7 @@ def clean_entry(entry):
         # fix pages
         if k == 'pages':
             v = v.replace('--', '&ndash;')
-            v = v.replace('-',  '&ndash;')
+            v = v.replace('-', '&ndash;')
 
         entry[k] = v
 
@@ -879,7 +883,7 @@ def get_entry_output(entry, out_path=''):
     """
 
     # --- Start list ---
-    out=['\n<li>\n']
+    out = ['\n<li>\n']
 
     # --- author ---
     if 'author' in entry:
@@ -898,7 +902,7 @@ def get_entry_output(entry, out_path=''):
             out.append('<br>')
 
     # --- title ---
-    if not(chapter):
+    if not chapter:
         out.append('<span class="title">"%s"</span>,' % entry['title'])
         if not params['single_line']:
             out.append('<br>')
@@ -907,7 +911,7 @@ def get_entry_output(entry, out_path=''):
     if chapter:
         out.append('in: %s, %s' % (entry['title'], entry['publisher']))
 
-    if entry['ENTRYTYPE']=='book':
+    if entry['ENTRYTYPE'] == 'book':
         out.append(entry['publisher'])
 
     out.append('\n')
@@ -933,7 +937,7 @@ def get_entry_output(entry, out_path=''):
     #  print(entry)
     if 'volume' in entry:
         out.append(', vol. %s' % entry['volume'])
-    if 'number' in entry and entry['ENTRYTYPE']!='techreport':
+    if 'number' in entry and entry['ENTRYTYPE'] != 'techreport':
         out.append(', no. %s' % entry['number'])
     if 'pages' in entry:
         out.append(', pp. %s' % entry['pages'])
@@ -959,26 +963,28 @@ def get_entry_output(entry, out_path=''):
 
     #  pdf
     pdf_link = get_pdflink_from_entry(entry)
-    if pdf_link!='':
+    if pdf_link != '':
         if params['use_icon'] and params['icon_pdf']:
-            icon_pdf_file = params['icon_pdf'] if len(params['author_group'])==0 else params['author_group_icon_pdf']
+            icon_pdf_file = params['icon_pdf'] if len(params['author_group']) == 0 else params['author_group_icon_pdf']
             icon_pdf_file = os.path.relpath(icon_pdf_file, os.path.dirname(out_path))
-            out.append('<a target="%s" href="%s"><img src="%s" alt="[pdf]" style="width: %s; height: %s;"></a>' % (params['target_link'], pdf_link, icon_pdf_file, params['icon_size'], params['icon_size']))
+            out.append('<a target="%s" href="%s"><img src="%s" alt="[pdf]" style="width: %s; height: %s;"></a>' % (
+            params['target_link'], pdf_link, icon_pdf_file, params['icon_size'], params['icon_size']))
         else:
             out.append('[<a target="%s" href="%s">pdf</a>]' % (params['target_link'], pdf_link))
         out.append('&nbsp;')
 
     #  url, www, doi, hal_id
     href_link = get_wwwlink_from_entry(entry)
-    if href_link!='':
+    if href_link != '':
         out.append('\n')
         if not params['use_icon']:
             out.append('[')
         out.append('<a target="%s" href="%s">' % (params['target_link'], href_link))
         if params['use_icon'] and params['icon_www']:
-            icon_www_file = params['icon_www'] if len(params['author_group'])==0 else params['author_group_icon_www']
+            icon_www_file = params['icon_www'] if len(params['author_group']) == 0 else params['author_group_icon_www']
             icon_www_file = os.path.relpath(icon_www_file, os.path.dirname(out_path))
-            out.append('<img src="%s" alt="[www]" style="width: %s; height: %s;"></a>' % (icon_www_file, params['icon_size'], params['icon_size']))
+            out.append('<img src="%s" alt="[www]" style="width: %s; height: %s;"></a>' % (
+            icon_www_file, params['icon_size'], params['icon_size']))
         else:
             out.append('link</a>')
         if not params['use_icon']:
@@ -988,48 +994,53 @@ def get_entry_output(entry, out_path=''):
     bibid = entry['ID']
     bibid = bibid.replace(':', u'-')
     bibid = bibid.replace('.', u'-')
-    show_abstract = params['show_abstract'] and 'abstract' in entry and entry['abstract']!=''
+    show_abstract = params['show_abstract'] and 'abstract' in entry and entry['abstract'] != ''
     show_bibtex = params['show_bibtex']
 
     # bibtex
     if show_bibtex:
         out.append('\n')
         if params['use_bootstrap_dialog']:
-            out.append('''[<a type="button" data-toggle="modal" data-target="#bib-%s">bibtex</a>]&nbsp;''' % (bibid) )
+            out.append('''[<a type="button" data-toggle="modal" data-target="#bib-%s">bibtex</a>]&nbsp;''' % bibid)
         else:
-            out.append('''[<a id="blk-%s" href="javascript:toggle('bib-%s', 'blk-%s');">bibtex</a>]&nbsp;''' % (bibid, bibid, bibid) )
+            out.append('''[<a id="blk-%s" href="javascript:toggle('bib-%s', 'blk-%s');">bibtex</a>]&nbsp;''' % (
+                bibid, bibid, bibid))
 
     #  abstract
     if show_abstract:
         out.append('\n')
         if params['use_bootstrap_dialog']:
-            out.append('''[<a type="button" data-toggle="modal" data-target="#abs-%s">abstract</a>]&nbsp;''' % (bibid) )
+            out.append('''[<a type="button" data-toggle="modal" data-target="#abs-%s">abstract</a>]&nbsp;''' % bibid)
         else:
-            out.append('''[<a id="alk-%s" href="javascript:toggle('abs-%s', 'alk-%s');">abstract</a>]&nbsp;''' % (bibid, bibid, bibid) )
+            out.append('''[<a id="alk-%s" href="javascript:toggle('abs-%s', 'alk-%s');">abstract</a>]&nbsp;''' % (
+                bibid, bibid, bibid))
 
     #  download fields
     for i_str in params['bibtex_fields_download']:
-        if i_str in entry and entry[i_str]!='':
+        if i_str in entry and entry[i_str] != '':
             out.append('\n')
-            out.append('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (params['target_link'], entry[i_str] if i_str!='arxiv' else get_arxivlink_from_entry(entry), i_str) )
+            out.append('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (
+            params['target_link'], entry[i_str] if i_str != 'arxiv' else get_arxivlink_from_entry(entry), i_str))
 
     #  citation
     if entry['ENTRYTYPE'] in params['show_citation_types'] and int(entry['year']) <= params['show_citation_year']:
-        if params['show_citation']=='no':
+        if params['show_citation'] == 'no':
             pass
-        elif params['show_citation']=='scholar.js':
-            out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (entry['title'], params['target_link_citation']) )
-        elif params['show_citation']=='bs':
+        elif params['show_citation'] == 'scholar.js':
+            out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (
+            entry['title'], params['target_link_citation']))
+        elif params['show_citation'] == 'bs':
             if entry['title'].lower() in params['dict_title']:
                 citations_url = params['dict_title'][entry['title'].lower()]
-                out.append('\n[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (params['target_link_citation'], citations_url[1], citations_url[0]) )
+                out.append('\n[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (
+                params['target_link_citation'], citations_url[1], citations_url[0]))
         else:
             raise ValueError('wrong show_citation')
 
     #  note
     for i_str in params['bibtex_fields_note']:
-        if i_str in entry and entry[i_str]!='':
-            out.append('\n(<span class="%s">%s</span>)&nbsp;' % (i_str if i_str!='note' else 'hlnote0', entry[i_str]))
+        if i_str in entry and entry[i_str] != '':
+            out.append('\n(<span class="%s">%s</span>)&nbsp;' % (i_str if i_str != 'note' else 'hlnote0', entry[i_str]))
 
     out.append('\n')
     if not params['single_line']:
@@ -1039,17 +1050,23 @@ def get_entry_output(entry, out_path=''):
         out.append('\n')
         bibstr = get_bibtex_from_entry(entry, comma_to_and=True)
         if params['use_bootstrap_dialog']:
-            out.append('''<div class="modal fade" id="bib-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Bibtex</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (bibid, bibstr))
+            out.append(
+                '''<div class="modal fade" id="bib-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Bibtex</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (
+                bibid, bibstr))
         else:
-            out.append('''<div class="bibtex" id="bib-%s" style="display: none;">\n<pre>%s</pre></div>''' % (bibid, bibstr))
+            out.append(
+                '''<div class="bibtex" id="bib-%s" style="display: none;">\n<pre>%s</pre></div>''' % (bibid, bibstr))
 
     #  abstract
     if show_abstract:
         out.append('\n')
         if params['use_bootstrap_dialog']:
-            out.append('''<div class="modal fade" id="abs-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Abstract</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (bibid, "\n".join(textwrap.wrap(entry['abstract'],68))))
+            out.append(
+                '''<div class="modal fade" id="abs-%s" role="dialog"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal">&times;</button><h4 class="modal-title">Abstract</h4></div><div class="modal-body"> \n<pre>%s</pre> </div><div class="modal-footer"><button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div></div></div>''' % (
+                bibid, "\n".join(textwrap.wrap(entry['abstract'], 68))))
         else:
-            out.append('''<div class="abstract" id="abs-%s" style="display: none;">%s</div>''' % (bibid, entry['abstract']))
+            out.append(
+                '''<div class="abstract" id="abs-%s" style="display: none;">%s</div>''' % (bibid, entry['abstract']))
 
     # Terminate the list entry
     out.append('\n</li>')
@@ -1063,7 +1080,7 @@ def get_entry_output(entry, out_path=''):
 
 
 def get_categories_of_entries(bib_entries):
-    '''get list of caregories of entries, section names, section tags'''
+    """get list of caregories of entries, section names, section tags"""
 
     # lists according to publication type
     preprintlist = []
@@ -1081,33 +1098,36 @@ def get_categories_of_entries(bib_entries):
 
         if 'eprint' in e:
             preprintlist.append(e)
-        elif (e['ENTRYTYPE']=="book"):
+        elif e['ENTRYTYPE'] == "book":
             booklist.append(e)
-        elif (e['ENTRYTYPE']=="inbook"):
+        elif e['ENTRYTYPE'] == "inbook":
             bookchapterlist.append(e)
-        elif (e['ENTRYTYPE']=="article"):
+        elif e['ENTRYTYPE'] == "article":
             journallist.append(e)
-        elif (e['ENTRYTYPE'] in params['type_conference_paper']):
+        elif e['ENTRYTYPE'] in params['type_conference_paper']:
             conflist.append(e)
-        elif (e['ENTRYTYPE'] in params['type_conference_abstract']):
+        elif e['ENTRYTYPE'] in params['type_conference_abstract']:
             abstractlist.append(e)
-        elif (e['ENTRYTYPE']=="techreport"):
+        elif e['ENTRYTYPE'] == "techreport":
             techreportlist.append(e)
-        elif (e['ENTRYTYPE']=="phdthesis"):
+        elif e['ENTRYTYPE'] == "phdthesis":
             thesislist.append(e)
         else:
             misclist.append(e)
 
     # write list of sections, papers
-    paperlists = [preprintlist, booklist, bookchapterlist, journallist, conflist, abstractlist, techreportlist, thesislist, misclist]
-    seclist = ['Preprints', 'Books', 'Book Chapters', 'Journal Articles', 'Conference Articles', 'Conference Abstracts', 'Research Reports', 'Theses', 'Miscellaneous']
-    secline = ['Preprints', 'Books', 'Book Chapters', 'Journals', 'Conferences', 'Abstracts', 'Research Reports', 'Theses', 'Miscellaneous']
+    paperlists = [preprintlist, booklist, bookchapterlist, journallist, conflist, abstractlist, techreportlist,
+                  thesislist, misclist]
+    seclist = ['Preprints', 'Books', 'Book Chapters', 'Journal Articles', 'Conference Articles', 'Conference Abstracts',
+               'Research Reports', 'Theses', 'Miscellaneous']
+    secline = ['Preprints', 'Books', 'Book Chapters', 'Journals', 'Conferences', 'Abstracts', 'Research Reports',
+               'Theses', 'Miscellaneous']
 
     return paperlists, seclist, secline
 
 
 def write_entries_by_type(bib_entries, show_total_citation=False):
-    '''write bib_entries by types (journal, conference, etc.)'''
+    """write bib_entries by types (journal, conference, etc.)"""
 
     # create the html file with opted encoding
     f1 = codecs.open(params['htmlfile_type'], 'w', encoding=params['encoding'])
@@ -1134,13 +1154,15 @@ def write_entries_by_type(bib_entries, show_total_citation=False):
     paperlists, seclist, secline = get_categories_of_entries(bib_entries)
 
     # write list of sections
-    if len(params['author_group'])==0:
-        str_year = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by year</b></a></span> &#8226;&nbsp;''' % os.path.basename(params['htmlfile_year']) if params['htmlfile_year'] else ''
+    if len(params['author_group']) == 0:
+        str_year = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by year</b></a></span> &#8226;&nbsp;''' % os.path.basename(
+            params['htmlfile_year']) if params['htmlfile_year'] else ''
         f1.write('<p><big>&#8226;&nbsp;%s' % str_year)
     for papers, sec, secl in zip(paperlists, seclist, secline):
-        strTmp = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_type']), get_anchor_name(sec), secl) if papers else ''
+        strTmp = '''<span style="font-size: 20px;"><a href="%s#%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (
+            os.path.basename(params['htmlfile_type']), get_anchor_name(sec), secl) if papers else ''
         f1.write(strTmp)
-    f1.write( '</big></p>\n\n' )
+    f1.write('</big></p>\n\n')
 
     ol_1, ol_2 = get_bulleted_list_str()
     # write list according to publication type
@@ -1166,14 +1188,14 @@ def write_entries_by_type(bib_entries, show_total_citation=False):
 
 
 def write_entries_by_year(bib_entries, show_total_citation=False):
-    '''write bib_entries by types (journal, conference, etc.)'''
+    """write bib_entries by types (journal, conference, etc.)"""
 
     year_entries_dict = {}
     for e in bib_entries:
         if e['year'] in year_entries_dict:
             year_entries_dict[e['year']].append(e)
         else:
-            year_entries_dict[e['year']]=[e]
+            year_entries_dict[e['year']] = [e]
 
     #  print 'year_entries_dict=', year_entries_dict
 
@@ -1197,16 +1219,18 @@ def write_entries_by_year(bib_entries, show_total_citation=False):
     if year_entries_dict:
         years = sorted(year_entries_dict.keys(), reverse=True)
 
-        str_type = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by type</b></a></span> &#8226;&nbsp;''' % os.path.basename(params['htmlfile_type']) if params['htmlfile_type'] else ''
+        str_type = '''<span style="font-size: 20px;"><a href="%s"><b>Sorted by type</b></a></span> &#8226;&nbsp;''' % os.path.basename(
+            params['htmlfile_type']) if params['htmlfile_type'] else ''
         f1.write('<p><big>&#8226;&nbsp;%s' % str_type)
         for y in years:
-            f1.write('''<span style="font-size: 20px;"><a href="%s#year%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_year']), y, y) )
+            f1.write('''<span style="font-size: 20px;"><a href="%s#year%s"><b>%s</b></a></span> &#8226;&nbsp;''' % (
+                os.path.basename(params['htmlfile_year']), y, y))
         f1.write('</big></p>\n\n')
 
         for y in years:
             #  print 'y0=', y
             #  print 'y1=', year_entries_dict[y]
-            f1.write('\n<h2><a name="year%s"></a>%s</h2>\n' % (y,y))
+            f1.write('\n<h2><a name="year%s"></a>%s</h2>\n' % (y, y))
             f1.write('\n%s\n' % ol_1)
             papers = year_entries_dict[y]
             if PY2:
@@ -1224,7 +1248,7 @@ def write_entries_by_year(bib_entries, show_total_citation=False):
 
 
 def write_entries_group(bib_entries):
-    '''write bib_entries by types in a group (journal, conference, etc.)'''
+    """write bib_entries by types in a group (journal, conference, etc.)"""
 
     # copy icons
     icons_folder = os.path.join(params['htmlfile_group'], 'Icons')
@@ -1282,7 +1306,7 @@ def write_entries_group(bib_entries):
 
 
 def _write_entries_group_index(bib_entries):
-    '''write bib_entries to a index.html file.'''
+    """write bib_entries to a index.html file."""
 
     html_file = os.path.join(params['htmlfile_group'], 'index.html')
 
@@ -1299,25 +1323,24 @@ def _write_entries_group_index(bib_entries):
     #      _, _, count_str = get_publisher_countnumber_from_entries(bib_entries)
     #      f1.write('%s\n\n' % count_str)
 
-
     # selection by year
     f1.write("""
 <table width="100%">
  <tr><td><h2>Selection by year</h2></td></tr>
 </table>
-""" )
+""")
 
     year_entries_dict = {}
     for e in bib_entries:
         if e['year'] in year_entries_dict:
             year_entries_dict[e['year']].append(e)
         else:
-            year_entries_dict[e['year']]=[e]
+            year_entries_dict[e['year']] = [e]
 
     years = sorted(year_entries_dict.keys(), reverse=True)
     f1.write('\n\n<br /><table align="center" cellpadding="4" cellspacing="2">\n')
     for ii in range(len(years)):
-        if ii%9 and ii!=0:
+        if ii % 9 and ii != 0:
             f1.write('<td><a href="Year/%s.html">%s</a></td>\n' % (years[ii], years[ii]))
         else:
             if ii:
@@ -1325,18 +1348,19 @@ def _write_entries_group_index(bib_entries):
             f1.write('<tr align="left" valign="top">\n<td><a href="Year/%s.html">%s</a></td>\n' % (years[ii], years[ii]))
     f1.write('</tr>\n </table><br />\n\n')
 
-
     # selection by category
-    seclist = ['Preprints', 'Books', 'Book Chapters', 'Journal Articles', 'Conference Articles', 'Conference Abstracts', 'Research Reports', 'Theses', 'Miscellaneous']
-    file_names = [os.path.join(params['author_group_Category'], get_anchor_name(secName)+'.html') for secName in seclist]
-    categories_print = ['']*len(file_names)
+    seclist = ['Preprints', 'Books', 'Book Chapters', 'Journal Articles', 'Conference Articles', 'Conference Abstracts',
+               'Research Reports', 'Theses', 'Miscellaneous']
+    file_names = [os.path.join(params['author_group_Category'], get_anchor_name(secName) + '.html') for secName in seclist]
+    categories_print = [''] * len(file_names)
     for ii in range(len(file_names)):
         if os.path.exists(file_names[ii]):
-            categories_print[ii] = '<td><a href="%s">%s</a></td>' % (os.path.relpath(file_names[ii], os.path.dirname(html_file)), seclist[ii])
+            categories_print[ii] = '<td><a href="%s">%s</a></td>' % (
+               os.path.relpath(file_names[ii], os.path.dirname(html_file)), seclist[ii])
 
-    categories_print = [cat for cat in categories_print if cat!='']
-    if len(categories_print)<9:
-        categories_print += ['']*(9-len(categories_print))
+    categories_print = [cat for cat in categories_print if cat != '']
+    if len(categories_print) < 9:
+        categories_print += [''] * (9 - len(categories_print))
 
     f1.write("""
 <table width="100%%">
@@ -1361,9 +1385,8 @@ def _write_entries_group_index(bib_entries):
 %s
 </tr>
 </table><br />\n\n\n
-"""% tuple(cat for cat in categories_print))
+""" % tuple(cat for cat in categories_print))
     #  f1.write('\n\n\n')
-
 
     # selection by venue
     f1.write("""
@@ -1375,27 +1398,25 @@ def _write_entries_group_index(bib_entries):
 <table align="center" cellpadding="3" cellspacing="1">
 <tr align="left" valign="top">\n""")
 
-
     count_name, count_number = _get_count_name_number(bib_entries)
     for ii in range(len(count_name)):
-        f1.write('<td><a href="Venue/%s.html"><b>%s</b> (%s)</a></td>\n' % (count_name[ii], count_name[ii], count_number[ii]) )
+        f1.write('<td><a href="Venue/%s.html"><b>%s</b> (%s)</a></td>\n' % (
+            count_name[ii], count_name[ii], count_number[ii]))
 
-        if not (ii+1)%3:
+        if not (ii + 1) % 3:
             f1.write('</tr>\n<tr align="left" valign="top">\n')
 
     f1.write('''</tr>
 </table>
 <br />\n\n\n''')
 
-
-
     # selection by author
-    author_list=[None]*26
+    author_list = [None] * 26
     for author in params['author_group'].keys():
         author_split = author.rsplit(' ', 1)
         jj = ord(author_split[1][0].lower()) - ord('a')
         if author_list[jj] is None:
-            author_list[jj]=[author]
+            author_list[jj] = [author]
         else:
             author_list[jj].append(author)
 
@@ -1409,11 +1430,11 @@ def _write_entries_group_index(bib_entries):
 <tr align="center">\n""")
 
     for ii in range(26):
-        out_str = chr(65+ii)
+        out_str = chr(65 + ii)
         if author_list[ii] is not None:
             out_str = '<a href="#AUTH%s">%s</a>' % (out_str, out_str)
-        f1.write('<td><b>%s</b></td>\n' %  out_str)
-        if not (ii+1)%13:
+        f1.write('<td><b>%s</b></td>\n' % out_str)
+        if not (ii + 1) % 13:
             f1.write('</tr>\n<tr align="center">\n')
 
     f1.write('</table><br />\n\n\n')
@@ -1422,17 +1443,18 @@ def _write_entries_group_index(bib_entries):
     for ii in range(26):
         if author_list[ii] is not None:
 
-            out_str = chr(65+ii)
+            out_str = chr(65 + ii)
             f1.write('<tr align="left" valign="top">\n<td>%s</td>\n' % out_str)
 
             for jj in range(len(author_list[ii])):
 
                 str_tag = '<a name="AUTH%s"></a>' % out_str
                 author_split = author_list[ii][jj].rsplit(' ', 1)
-                str_author = author_split[1] + '-' + author_split[0].replace(' ', '-')+'.html'
-                f1.write('<td>%s<a href="Author/%s">%s <strong>%s</strong></a></td>\n' % (str_tag if jj==0 else '', str_author, author_split[0], author_split[1]) )
+                str_author = author_split[1] + '-' + author_split[0].replace(' ', '-') + '.html'
+                f1.write('<td>%s<a href="Author/%s">%s <strong>%s</strong></a></td>\n' % (
+                    str_tag if jj == 0 else '', str_author, author_split[0], author_split[1]))
 
-                if not (jj+1)%4:
+                if not (jj + 1) % 4:
                     f1.write('</tr>\n<tr align="left" valign="top">\n')
 
     f1.write('''</tr>
@@ -1457,7 +1479,6 @@ def _write_entries_group_index(bib_entries):
 </tr>
 </table><br />\n\n\n""")
 
-
     f1.write(get_html_disclaimer())
 
     # afterlog
@@ -1467,9 +1488,8 @@ def _write_entries_group_index(bib_entries):
     print('Convert %s to %s' % (params['bibfile'], html_file))
 
 
-
 def _write_entries_group_year(bib_entries):
-    '''write bib_entries by types for different years.'''
+    """write bib_entries by types for different years."""
 
     year_folder = os.path.join(params['htmlfile_group'], 'Year')
     params['author_group_Year'] = year_folder
@@ -1481,13 +1501,12 @@ def _write_entries_group_year(bib_entries):
         if e['year'] in year_entries_dict:
             year_entries_dict[e['year']].append(e)
         else:
-            year_entries_dict[e['year']]=[e]
+            year_entries_dict[e['year']] = [e]
 
     #  print 'year_entries_dict=', year_entries_dict
 
     for year, entries in year_entries_dict.items():
-
-        html_file = os.path.join(year_folder, str(year)+'.html')
+        html_file = os.path.join(year_folder, str(year) + '.html')
         params['htmlfile_type'] = html_file
         params['title'] = 'Publications of Year %s' % year
 
@@ -1495,7 +1514,7 @@ def _write_entries_group_year(bib_entries):
 
 
 def _write_entries_group_venue(bib_entries):
-    '''write bib_entries by types for different publication venue.'''
+    """write bib_entries by types for different publication venue."""
 
     folder = os.path.join(params['htmlfile_group'], 'Venue')
     params['author_group_Venue'] = folder
@@ -1511,10 +1530,10 @@ def _write_entries_group_venue(bib_entries):
             if name_e in venue_entries_dict:
                 venue_entries_dict[name_e].append(e)
             else:
-                venue_entries_dict[name_e]=[e]
+                venue_entries_dict[name_e] = [e]
 
     for venue, e_list in venue_entries_dict.items():
-        html_file = os.path.join(folder, venue+'.html')
+        html_file = os.path.join(folder, venue + '.html')
         params['htmlfile_type'] = html_file
         params['title'] = 'Publications in %s' % venue
 
@@ -1522,7 +1541,7 @@ def _write_entries_group_venue(bib_entries):
 
 
 def _write_entries_group_author(bib_entries):
-    '''write bib_entries by types for different authors.'''
+    """write bib_entries by types for different authors."""
 
     author_folder = os.path.join(params['htmlfile_group'], 'Author')
     params['author_group_Author'] = author_folder
@@ -1533,38 +1552,38 @@ def _write_entries_group_author(bib_entries):
     for author, value in params['author_group'].items():
 
         author_split = author.rsplit(' ', 1)
-        if len(author_split)!=2:
+        if len(author_split) != 2:
             raise ValueError('author_split should have 2 elements for first and last name')
         # last-first.html
-        html_file = os.path.join(author_folder, author_split[1] + '-' + author_split[0].replace(' ', '-')+'.html')
+        html_file = os.path.join(author_folder, author_split[1] + '-' + author_split[0].replace(' ', '-') + '.html')
         params['htmlfile_type'] = html_file
         params['title'] = 'Publications of %s' % author
 
-        entries_selected=[]
+        entries_selected = []
         for e in bib_entries:
             if is_entry_selected(e, selection_and={'author': [author]}):
                 entries_selected.append(e)
 
         if len(value):
             for k, v in value.items():
-                if k.lower()=='scholarid':
+                if k.lower() == 'scholarid':
                     params['googlescholarID'] = v
                 else:
                     params['googlescholarID'] = ''
         else:
             params['googlescholarID'] = ''
 
-        if params['show_citation']=='bs' and params['googlescholarID']:
+        if params['show_citation'] == 'bs' and params['googlescholarID']:
             out_scholar = get_title_citation_url(params['googlescholarID'])
             params['dict_title'] = out_scholar[0]
             params['google_scholar_out'] = out_scholar[1:]
             params['dict_title_group'].update(out_scholar[0])
 
-        write_entries_by_type(entries_selected, show_total_citation=params['show_total_citation'] and params['googlescholarID'])
+        write_entries_by_type(entries_selected, params['show_total_citation'] and params['googlescholarID'])
 
 
 def _write_entries_group_complete(bib_entries):
-    '''write bib_entries by types in complete-bibliography.html (journal, conference, etc.)'''
+    """write bib_entries by types in complete-bibliography.html (journal, conference, etc.)"""
 
     biblio_folder = os.path.join(params['htmlfile_group'], 'Bibliography')
     params['author_group_Bibliography'] = biblio_folder
@@ -1577,7 +1596,7 @@ def _write_entries_group_complete(bib_entries):
 
 
 def _write_entries_group_category(bib_entries):
-    '''write bib_entries by types in in different categories (journal, conference, etc.)'''
+    """write bib_entries by types in in different categories (journal, conference, etc.)"""
 
     folder = os.path.join(params['htmlfile_group'], 'Category')
     params['author_group_Category'] = folder
@@ -1589,8 +1608,7 @@ def _write_entries_group_category(bib_entries):
 
     for ii in range(len(paperlists)):
         if len(paperlists[ii]):
-
-            html_file = os.path.join(folder, get_anchor_name(seclist[ii])+'.html')
+            html_file = os.path.join(folder, get_anchor_name(seclist[ii]) + '.html')
             params['htmlfile_type'] = html_file
             params['title'] = 'Publications of %s' % seclist[ii]
 
@@ -1598,7 +1616,7 @@ def _write_entries_group_category(bib_entries):
 
 
 def write_entries_to_bibfile(bib_entries):
-    '''write entries into a bib file'''
+    """write entries into a bib file"""
 
     f1 = codecs.open(params['outbibfile'], 'w', encoding=params['encoding'])
 
@@ -1612,7 +1630,6 @@ def write_entries_to_bibfile(bib_entries):
 
 
 def main():
-
     args = docopt(__doc__, version='1.0')
 
     _bibfile = args['<bibfile>']
@@ -1622,11 +1639,10 @@ def main():
     _input = args['--input']
     _outbibfile = args['--outbib']
 
-    if _verbose>=1:
+    if _verbose >= 1:
         print(args)
 
     params['verbose'] = _verbose
-
 
     config = configparser.ConfigParser()
     if args['--conf']:
@@ -1635,16 +1651,22 @@ def main():
         #  print config.items(param_str)
 
         #  strings, lists, dicts
-        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'author_sign', 'author_group',
-                         'author_names_highlighted', 'conference_shortname_highlighted', 'journal_shortname_highlighted',
-                         'journal_fullname_highlighted','show_citation_types', 'show_abstract', 'show_bibtex', 'icon_pdf', 'icon_www', 'icon_size',
-                         'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract', 'encoding',
-                         'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css', 'count_publisher', 'selection_and', 'selection_or', 'bulleted_list']:
+        for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'author_sign',
+                         'author_group',
+                         'author_names_highlighted', 'conference_shortname_highlighted',
+                         'journal_shortname_highlighted',
+                         'journal_fullname_highlighted', 'show_citation_types', 'show_abstract', 'show_bibtex',
+                         'icon_pdf', 'icon_www', 'icon_size',
+                         'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract',
+                         'encoding',
+                         'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css',
+                         'count_publisher', 'selection_and', 'selection_or', 'bulleted_list']:
             if config.has_option(param_str, name_str):
-                params[name_str] = ast.literal_eval(config.get(param_str,name_str))
+                params[name_str] = ast.literal_eval(config.get(param_str, name_str))
 
         #  booleans
-        for name_str in ['use_icon', 'single_line', 'use_bootstrap_dialog', 'add_blank_line_after_item', 'show_page_title', 'show_count_number', 'show_total_citation', 'show_author_sign']:
+        for name_str in ['use_icon', 'single_line', 'use_bootstrap_dialog', 'add_blank_line_after_item',
+                         'show_page_title', 'show_count_number', 'show_total_citation', 'show_author_sign']:
             if config.has_option(param_str, name_str):
                 params[name_str] = config.getboolean(param_str, name_str)
 
@@ -1668,23 +1690,23 @@ def main():
 
     # use different output html file for different types
     if len(params['author_group']):
-        file_name , file_ext = os.path.splitext(_htmlfile)
+        file_name, file_ext = os.path.splitext(_htmlfile)
         if not os.path.exists(file_name):
             os.mkdir(file_name)
 
         params['htmlfile_group'] = file_name
 
     else:
-        if params['show_paper_style']=='type':
+        if params['show_paper_style'] == 'type':
             params['htmlfile_type'] = _htmlfile
             params['htmlfile_year'] = ''
-        elif params['show_paper_style']=='year':
+        elif params['show_paper_style'] == 'year':
             params['htmlfile_type'] = ''
             params['htmlfile_year'] = _htmlfile
-        elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
-            file_name , file_ext = os.path.splitext(_htmlfile)
-            params['htmlfile_type'] = '%s_by_type%s' %(file_name, file_ext)
-            params['htmlfile_year'] = '%s_by_year%s' %(file_name, file_ext)
+        elif params['show_paper_style'] == 'year_type' or params['show_paper_style'] == 'type_year':
+            file_name, file_ext = os.path.splitext(_htmlfile)
+            params['htmlfile_type'] = '%s_by_type%s' % (file_name, file_ext)
+            params['htmlfile_year'] = '%s_by_year%s' % (file_name, file_ext)
         else:
             raise ValueError('wrong show_paper_style')
 
@@ -1695,22 +1717,20 @@ def main():
     #  add conferences
     params['count_publisher'] = params['count_publisher'] + params['conference_shortname_highlighted']
 
-    if _verbose>=1:
-        print('params = %s' % params )
+    if _verbose >= 1:
+        print('params = %s' % params)
 
-
-    params['journal_fullname_highlighted_lower'] = [name.lower() for name in params['journal_fullname_highlighted'] ]
+    params['journal_fullname_highlighted_lower'] = [name.lower() for name in params['journal_fullname_highlighted']]
     current_year = datetime.date.today().year
     params['show_citation_year'] = current_year - params['show_citation_before_years']
 
-    if params['show_citation']!='bs' and params['show_total_citation']:
+    if params['show_citation'] != 'bs' and params['show_total_citation']:
         raise ValueError("show_total_citation==True needs show_citation=='bs'")
 
     params['author_group_authors'] = list(params['author_group'].keys())
 
-
     # html afterlog
-    if params['show_citation']=='scholar.js' and 'googlescholarID' in params:
+    if params['show_citation'] == 'scholar.js' and 'googlescholarID' in params:
         afterlog = """
         <br>
             <script type="text/javascript">
@@ -1737,18 +1757,17 @@ def main():
     bib_database = bibtexparser.loads(bibtex_str)
     bib_entries = bib_database.entries
 
-
-    entries_selected=[]
+    entries_selected = []
     for e in bib_entries:
 
-        if _verbose>=2:
-            print ('e before clean=', e)
+        if _verbose >= 2:
+            print('e before clean=', e)
 
         #  clean entry for output
         clean_entry(e)
 
         if is_entry_selected(e):
-            if len(params['author_group'])==0 or len(params['author_group'])>0 and is_entry_selected(e, selection_or={'author': params['author_group_authors']}):
+            if len(params['author_group']) == 0 or len(params['author_group']) > 0 and is_entry_selected(e, selection_or={'author': params['author_group_authors']}):
 
                 #  fill some empty fields
                 add_empty_fields_in_entry(e)
@@ -1756,35 +1775,32 @@ def main():
                 # add short name
                 add_shortname_in_entry(e)
 
-                if _verbose>=2:
-                    print ('e after clean =', e)
+                if _verbose >= 2:
+                    print('e after clean =', e)
 
                 entries_selected.append(e)
 
-
     if params['outbibfile']:
         write_entries_to_bibfile(entries_selected)
-
 
     if len(params['author_group']):
 
         write_entries_group(entries_selected)
 
     else:
-        if params['show_citation']=='bs':
+        if params['show_citation'] == 'bs':
             out_scholar = get_title_citation_url(params['googlescholarID'])
             params['dict_title'] = out_scholar[0]
             params['google_scholar_out'] = out_scholar[1:]
 
-        if params['show_paper_style']=='type':
+        if params['show_paper_style'] == 'type':
             write_entries_by_type(entries_selected, params['show_total_citation'])
-        elif params['show_paper_style']=='year':
+        elif params['show_paper_style'] == 'year':
             write_entries_by_year(entries_selected, params['show_total_citation'])
-        elif params['show_paper_style']=='year_type' or params['show_paper_style']=='type_year':
+        elif params['show_paper_style'] == 'year_type' or params['show_paper_style'] == 'type_year':
             write_entries_by_type(entries_selected, params['show_total_citation'])
             write_entries_by_year(entries_selected, params['show_total_citation'])
 
 
 if __name__ == '__main__':
     main()
-
