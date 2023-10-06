@@ -80,13 +80,9 @@ params['encoding'] = 'UTF-8'
 #  style of paper list ('type', 'year', 'type_year')
 params['show_paper_style'] = 'type'
 
-params['journal_shortname_highlighted'] = [u'TMI', u'HBM', u'MIA', u'MedIA', u'TIP', u'TPAMI', u'IJCV', u'MRM']
-params['journal_fullname_highlighted'] = [u'Nature Methods', u'NeuroImage', u'Medical Image Analysis',
-                                          u'IEEE Transactions on Medical Imaging',
-                                          u'IEEE Transactions on Pattern Analysis and Machine Intelligence',
-                                          u'Medical Physics', u'Magnetic Resonance in Medicine',
-                                          u'SIAM Journal on Imaging Sciences']
+# highlighted journal and conference (the order determines the order of publications)
 params['conference_shortname_highlighted'] = [u'MICCAI', u'IPMI', u'CVPR', u'NIPS', u'ICCV', u'ECCV']
+# highlight authors
 params['author_names_highlighted'] = []
 
 # used for selection, select entries from bib file
@@ -95,21 +91,24 @@ params['selection_or'] = {}
 
 params['outbibfile'] = ''
 
-# show the number of papers in specific journals and conferences
+# show the number of papers in specific journals and conferences, where journal and confereces are determined by count_publisher and conference_shortname_highlighted.
 params['show_count_number'] = True
-# counted publisher (conferences are determined by conference_shortname_highlighted)
+# journal and conference short and full names for counts (the order determines the order of publications).
 params['count_publisher'] = [
-    [u'Nature Methods'],
-    [u'TMI', u'IEEE Transactions on Medical Imaging'],
-    [u'MedIA', u'MIA', u'Medical Image Analysis'],
-    [u'TPAMI', u'IEEE Transactions on Pattern Analysis and Machine Intelligence'],
-    [u'IJCV', u'International Journal of Computer Vision'],
-    [u'NeuroImage'],
-    [u'HBM', u'Human Brain Mapping'],
-    [u'TIP', u'IEEE Transactions on Image Processing'],
-    [u'MRM', 'Magnetic Resonance in Medicine'],
-    [u'Medical Physics'],
+    ['NM', 'Nature Methods'],
+    ['TPAMI', 'IEEE Transactions on Pattern Analysis and Machine Intelligence'],
+    ['IJCV', 'International Journal of Computer Vision'],
+    ['TMI', 'IEEE Transactions on Medical Imaging'],
+    ['MedIA', 'Medical Image Analysis'],
+    ['TIP', 'IEEE Transactions on Image Processing'],
+    ['NeuroImage'],
+    ['HBM', 'Human Brain Mapping'],
+    ['CC', 'Cerebral Cortex'],
+    ['MRM', 'Magnetic Resonance in Medicine'],
+    ['Medical Physics']
 ]
+# publisher (journal) short and full names, it will work together with count_publisher
+params['publisher_short_full_names'] = params['count_publisher'].copy()
 
 params['show_citation_types'] = [u'article', u'inproceedings', u'phdthesis', u'inbook']
 
@@ -230,6 +229,21 @@ def is_author_selected(entry, names, select_field=''):
         raise ValueError("Wrong select_field ('first', 'corresponding', or '')!")
 
 
+def get_journal_short_full_names(sf_names):
+    """get journal short and full names."""
+
+    short_list = []
+    full_list = []
+    for names in sf_names:
+        if len(names)>1:
+            short_list.append(names[0])
+            full_list.append(names[-1])
+        else:
+            full_list.append(names[0])
+
+    return short_list, full_list
+
+
 def cmp_by_type(y, x):
     """sort entry by type"""
 
@@ -245,12 +259,17 @@ def cmp_by_type(y, x):
     else:
         if x['ENTRYTYPE'] == 'article':
             x_hl, y_hl = False, False
-            for word in params['journal_shortname_highlighted']:
-                if x['journal'].find('(%s)' % word) >= 0:  x_hl = True
-                if y['journal'].find('(%s)' % word) >= 0:  y_hl = True
             for word in params['journal_fullname_highlighted_lower']:
                 if not x_hl and x['journal'].lower().find(word) >= 0:  x_hl = True
                 if not y_hl and y['journal'].lower().find(word) >= 0:  y_hl = True
+                if x_hl or y_hl:
+                    break
+            if not (x_hl or y_hl):
+                for word in params['journal_shortname_highlighted']:
+                    if x['journal'].find('(%s)' % word) >= 0:  x_hl = True
+                    if y['journal'].find('(%s)' % word) >= 0:  y_hl = True
+                    if x_hl or y_hl:
+                        break
             if x_hl and not y_hl:  return 1
             if not x_hl and y_hl:  return -1
         elif x['ENTRYTYPE'] in params['type_conference_paper']:
@@ -258,6 +277,8 @@ def cmp_by_type(y, x):
             for word in params['conference_shortname_highlighted']:
                 if x['booktitle'].find(word + "'") >= 0:  x_hl = True
                 if y['booktitle'].find(word + "'") >= 0:  y_hl = True
+                if x_hl or y_hl:
+                    break
             if x_hl and not y_hl:  return 1
             if not x_hl and y_hl:  return -1
 
@@ -502,7 +523,7 @@ def get_publisher_shortname_from_entry(entry):
         return pub[dem_1 + 1:dem], True
     else:
         pub_lower = pub.lower()
-        for cp in params['count_publisher']:
+        for cp in params['publisher_short_full_names']:
             if len(cp) == 1:
                 if cp[0].lower() == pub_lower:
                     return cp[0], True
@@ -650,13 +671,17 @@ def is_entry_selected(entry, selection_and=None, selection_or=None):
 
     Parameters
     ----------
-        entry          :  a bib entry
-        selection_and  :  dict with conditions (and operator)
-        selection_or   :  dict with conditions (or operator)
+        entry : dict
+          a bib entry
+        selection_and : dict
+          dict with conditions (and operator)
+        selection_or : dict
+          dict with conditions (or operator)
 
     Returns
     -------
-        output : True if it is selected
+        output : bool
+          True if it is selected
     """
 
     if selection_and is None:
@@ -1654,13 +1679,12 @@ def main():
         for name_str in ['title', 'css_file', 'googlescholarID', 'scholar.js', 'show_citation', 'author_sign',
                          'author_group',
                          'author_names_highlighted', 'conference_shortname_highlighted',
-                         'journal_shortname_highlighted',
-                         'journal_fullname_highlighted', 'show_citation_types', 'show_abstract', 'show_bibtex',
+                         'show_citation_types', 'show_abstract', 'show_bibtex',
                          'icon_pdf', 'icon_www', 'icon_size',
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract',
                          'encoding',
                          'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css',
-                         'count_publisher', 'selection_and', 'selection_or', 'bulleted_list']:
+                         'count_publisher', 'publisher_short_full_names', 'selection_and', 'selection_or', 'bulleted_list']:
             if config.has_option(param_str, name_str):
                 params[name_str] = ast.literal_eval(config.get(param_str, name_str))
 
@@ -1675,6 +1699,14 @@ def main():
             if config.has_option(param_str, name_str):
                 params[name_str] = config.getint(param_str, name_str)
 
+        # publisher_short_full_names, add short_full lists in params['count_publisher']
+        tmp = params['count_publisher'].copy()
+        for name_sf in params['publisher_short_full_names']:
+            if name_sf not in params['count_publisher']:
+                tmp.append(name_sf)
+        params['publisher_short_full_names'] = tmp.copy()
+
+
     if args['--input']:
         paramsInput = ast.literal_eval(_input)
         for k, v in paramsInput.items():
@@ -1685,7 +1717,6 @@ def main():
         params['show_citation'] = 'no'
 
     # use lower words in some keys
-    #  params['journal_fullname_highlighted'] = [name.lower() for name in params['journal_fullname_highlighted'] ]
     params['show_paper_style'] = params['show_paper_style'].lower()
 
     # use different output html file for different types
@@ -1720,7 +1751,11 @@ def main():
     if _verbose >= 1:
         print('params = %s' % params)
 
-    params['journal_fullname_highlighted_lower'] = [name.lower() for name in params['journal_fullname_highlighted']]
+    # get fullname and shortname for journals
+    sn, fn = get_journal_short_full_names(params['publisher_short_full_names'])
+    params['journal_fullname_highlighted_lower'] = [name.lower() for name in fn]
+    params['journal_shortname_highlighted'] = sn
+
     current_year = datetime.date.today().year
     params['show_citation_year'] = current_year - params['show_citation_before_years']
 
