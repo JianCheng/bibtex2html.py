@@ -116,6 +116,7 @@ params['author_group'] = {}
 
 #  'no', 'scholar.js' 'bs'
 params['show_citation'] = 'no'
+params['show_citation_lb'] = 0  # Show citations only if it is not smaller than the lb threshold.
 # show total citation by googlescholarID using bs
 params['show_total_citation'] = False
 # obtained by googlescholarID by using bs
@@ -390,7 +391,7 @@ def get_title_citation_url(scholarID):
 
     dict_out = {}
     for i, name in enumerate(title):
-        dict_out[name.lower()] = [citations[i] if citations[i] != u'' else u'0', title_url[i]]
+        dict_out[clean_title(name)] = [citations[i] if citations[i] != u'' else u'0', title_url[i]]
 
     #  (total_citations, h-index, str_out)
     career = soup.findAll("td", {"class": "gsc_rsb_std"}, text=True)
@@ -824,6 +825,20 @@ Last modifiled:  %s
     return log_disclaimer
 
 
+def clean_title(title: str):
+    """clean title str for better match"""
+
+    title = title.strip()
+    title = title.replace('\'', ' ')
+    title = title.replace('-', ' ')
+    title = title.replace('‐', ' ')
+    title = title.replace('–', ' ')
+    title = ' '.join(title.split())
+    title = title.lower()
+
+    return title
+
+
 def clean_entry(entry):
     """Clean up an entry"""
 
@@ -1055,10 +1070,12 @@ def get_entry_output(entry, out_path=''):
             out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (
             entry['title'], params['target_link_citation']))
         elif params['show_citation'] == 'bs':
-            if entry['title'].lower() in params['dict_title']:
-                citations_url = params['dict_title'][entry['title'].lower()]
-                out.append('\n[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (
-                params['target_link_citation'], citations_url[1], citations_url[0]))
+            tt = clean_title(entry['title'])
+            if tt in params['dict_title']:
+                citations_url = params['dict_title'][tt]
+                if int(citations_url[0]) >= params['show_citation_lb']:
+                    out.append('\n[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (
+                    params['target_link_citation'], citations_url[1], citations_url[0]))
         else:
             raise ValueError('wrong show_citation')
 
@@ -1695,7 +1712,7 @@ def main():
                 params[name_str] = config.getboolean(param_str, name_str)
 
         #  integer
-        for name_str in ['show_citation_before_years']:
+        for name_str in ['show_citation_before_years', 'show_citation_lb']:
             if config.has_option(param_str, name_str):
                 params[name_str] = config.getint(param_str, name_str)
 
