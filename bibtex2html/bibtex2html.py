@@ -624,13 +624,15 @@ def get_publisher_countnumber_from_entries(entries):
     count_name, count_number = _get_count_name_number(entries)
 
     if sum(count_number):
-        count_str_list = ['<p>&#8226;&nbsp;']
+        count_str_list = ['<p><big>&#8226;&nbsp;']
         for name, num in zip(count_name, count_number):
             if num > 0:
-                str_count = '''<a href="%s#%s">''' % (os.path.basename(params['htmlfile_venue']), name) if params['show_paper_style'] == 'venue' else ''
-                str_count += '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
+                if params['show_paper_style'] == 'venue':
+                    str_count = '''<a href="%s#%s"><b>%s</b> (%s)</a> &#8226;&nbsp;''' % (os.path.basename(params['htmlfile_venue']), name, name, num)
+                else:
+                    str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
                 count_str_list.append(str_count)
-        count_str_list.append('</p>')
+        count_str_list.append('</big></p>')
 
         return count_name, count_number, ''.join(count_str_list)
 
