@@ -58,6 +58,13 @@ bibtex2html.py papers.bib papers.html -c papers.ini -i "{'show_citation':'no', '
 bibtex2html.py papers.bib papers.html -c papers.ini -i "{'show_paper_style':'type', 'selection_and': {'author_first': ['Jian Cheng'], 'year':[2010,2013] }}"
 ```
 
+* Generate paper lists by venue using a configuration file. It requires access to google scholar.
+
+```
+bibtex2html.py papers.bib papers.html -c papers.ini -i "{'show_paper_style':'venue'}" 
+```
+
+
 #### To generate a group of html files
 
 * Use `author_group` option to specify a group of people, then generate html files for the group.

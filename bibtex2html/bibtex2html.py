@@ -77,7 +77,7 @@ params['title'] = u'Publication List'
 params['css_file'] = ''
 params['encoding'] = 'UTF-8'
 
-#  style of paper list ('type', 'year', 'type_year')
+#  style of paper list ('type', 'year', 'type_year', 'venue')
 params['show_paper_style'] = 'type'
 
 # highlighted journal and conference (the order determines the order of publications)
@@ -627,7 +627,8 @@ def get_publisher_countnumber_from_entries(entries):
         count_str_list = ['<p>&#8226;&nbsp;']
         for name, num in zip(count_name, count_number):
             if num > 0:
-                str_count = '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
+                str_count = '''<a href="%s#%s">''' % (os.path.basename(params['htmlfile_venue']), name) if params['show_paper_style'] == 'venue' else ''
+                str_count += '''<b>%s</b> (%s) &#8226;&nbsp;''' % (name, num)
                 count_str_list.append(str_count)
         count_str_list.append('</p>')
 
@@ -1230,7 +1231,7 @@ def write_entries_by_type(bib_entries, show_total_citation=False):
 
 
 def write_entries_by_year(bib_entries, show_total_citation=False):
-    """write bib_entries by types (journal, conference, etc.)"""
+    """write bib_entries by years."""
 
     year_entries_dict = {}
     for e in bib_entries:
@@ -1287,6 +1288,53 @@ def write_entries_by_year(bib_entries, show_total_citation=False):
     f1.close()
 
     print('Convert %s to %s' % (params['bibfile'], params['htmlfile_year']))
+
+
+def write_entries_by_venue(bib_entries, show_total_citation=False):
+    """write bib_entries by venues."""
+
+    count_name, count_number, count_str = get_publisher_countnumber_from_entries(bib_entries)
+
+    venue_entries_dict = {}
+    for name in count_name:
+        venue_entries_dict[name] = []
+    for e in bib_entries:
+        name_e, _ = get_publisher_shortname_from_entry(e)
+        if name_e and name_e in count_name:
+            venue_entries_dict[name_e].append(e)
+
+    # create the html file with opted encoding
+    f1 = codecs.open(params['htmlfile_venue'], 'w', encoding=params['encoding'])
+
+    # write the initial part of the file
+    f1.write(get_html_prelog(params['htmlfile_venue']))
+
+    if params['show_page_title']:
+        f1.write('<h1>%s</h1>\n\n' % params['title'])
+
+    if show_total_citation:
+        f1.write('%s\n\n' % params['google_scholar_out'][2])
+
+    if params['show_count_number']:
+        f1.write('%s\n\n' % count_str)
+
+    ol_1, ol_2 = get_bulleted_list_str()
+    if venue_entries_dict:
+        for venue, e_list in venue_entries_dict.items():
+            f1.write('\n<h2><a name="%s"></a>%s</h2>\n' % (venue, venue))
+            f1.write('\n%s\n' % ol_1)
+            if PY2:
+                e_list = sorted(e_list, cmp=cmp_by_year)
+            else:
+                e_list = sorted(e_list, key=functools.cmp_to_key(cmp_by_year))
+            for e in e_list:
+                f1.write(get_entry_output(e, params['htmlfile_venue']))
+            f1.write('\n%s\n\n\n' % ol_2)
+
+    f1.write(params['afterlog'])
+    f1.close()
+
+    print('Convert %s to %s' % (params['bibfile'], params['htmlfile_venue']))
 
 
 def write_entries_group(bib_entries):
@@ -1556,7 +1604,7 @@ def _write_entries_group_year(bib_entries):
 
 
 def _write_entries_group_venue(bib_entries):
-    """write bib_entries by types for different publication venue."""
+    """write bib_entries by types for different publication venues."""
 
     folder = os.path.join(params['htmlfile_group'], 'Venue')
     params['author_group_Venue'] = folder
@@ -1755,6 +1803,8 @@ def main():
             file_name, file_ext = os.path.splitext(_htmlfile)
             params['htmlfile_type'] = '%s_by_type%s' % (file_name, file_ext)
             params['htmlfile_year'] = '%s_by_year%s' % (file_name, file_ext)
+        elif params['show_paper_style'] == 'venue':
+            params['htmlfile_venue'] = _htmlfile
         else:
             raise ValueError('wrong show_paper_style')
 
@@ -1852,6 +1902,8 @@ def main():
         elif params['show_paper_style'] == 'year_type' or params['show_paper_style'] == 'type_year':
             write_entries_by_type(entries_selected, params['show_total_citation'])
             write_entries_by_year(entries_selected, params['show_total_citation'])
+        elif params['show_paper_style'] == 'venue':
+            write_entries_by_venue(entries_selected, params['show_total_citation'])
 
 
 if __name__ == '__main__':
