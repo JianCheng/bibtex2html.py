@@ -1001,8 +1001,8 @@ def get_entry_output(entry, out_path=''):
 
     # --- Links ---
 
-    if not params['single_line']:
-        out.append('<div class="publilinks">\n')
+    #  if not params['single_line']:
+    #      out.append('<div class="publilinks">\n')
 
     #  pdf
     pdf_link = get_pdflink_from_entry(entry)
@@ -1088,8 +1088,8 @@ def get_entry_output(entry, out_path=''):
             out.append('\n(<span class="%s">%s</span>)&nbsp;' % (i_str if i_str != 'note' else 'hlnote0', entry[i_str]))
 
     out.append('\n')
-    if not params['single_line']:
-        out.append('</div>')
+    #  if not params['single_line']:
+    #      out.append('</div>')
 
     if show_bibtex:
         out.append('\n')
