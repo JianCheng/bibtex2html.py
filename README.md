@@ -80,3 +80,14 @@ It outputs files in the folder `papers`.
 ```
 bibtex2html.py papers_group.bib papers -c papers_group.ini --nc
 ```
+
+## Publication metadata
+
+Each generated publication `<li>` has the `publication-item` class and machine-readable attributes for client-side grouping and filtering:
+
+* `data-bib-id`, `data-entry-type`, and `data-publication-type`
+* `data-year`, `data-venue`, and `data-venue-short`
+* `data-selected-venue` and `data-selected-venue-order`
+* `data-highlighted-author-roles`
+
+These attributes are additive and do not change the existing publication text or links.

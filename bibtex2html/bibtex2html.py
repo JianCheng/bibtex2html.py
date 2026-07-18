@@ -59,6 +59,15 @@ import datetime
 import codecs
 import textwrap
 
+try:
+    from html import escape as html_escape
+    from html import unescape as html_unescape
+except ImportError:
+    from cgi import escape as html_escape
+    from HTMLParser import HTMLParser
+
+    html_unescape = HTMLParser().unescape
+
 from bs4 import BeautifulSoup
 
 import bibtexparser
@@ -204,7 +213,7 @@ def is_author_selected(entry, names, select_field=''):
         is_selected : boolean
     """
 
-    author_names = entry['author'].split(', ')
+    author_names = entry.get('author', '').split(', ')
     k = 'author_' + select_field
     if select_field == 'first':
         if author_names[0] in names:
@@ -912,6 +921,188 @@ def clean_entry(entry):
         entry[k] = v
 
 
+def escape_html_attribute(value):
+    """Escape a value for use inside a double-quoted HTML attribute.
+
+    Parameters
+    ----------
+        value : object
+          Attribute value to escape.
+
+    Returns
+    -------
+        output : str
+          Escaped text without surrounding quotes.
+    """
+
+    return html_escape(html_unescape(unicode(value)), quote=True)
+
+
+def get_publication_type(entry):
+    """Return the public publication category for a BibTeX entry.
+
+    Parameters
+    ----------
+        entry : dict
+          BibTeX entry to classify.
+
+    Returns
+    -------
+        output : str
+          Stable publication category key.
+    """
+
+    if 'eprint' in entry:
+        return 'preprint'
+    if entry['ENTRYTYPE'] == 'book':
+        return 'book'
+    if entry['ENTRYTYPE'] == 'inbook':
+        return 'book-chapter'
+    if entry['ENTRYTYPE'] == 'article':
+        return 'journal'
+    if entry['ENTRYTYPE'] in params['type_conference_paper']:
+        return 'conference'
+    if entry['ENTRYTYPE'] in params['type_conference_abstract']:
+        return 'conference-abstract'
+    if entry['ENTRYTYPE'] == 'techreport':
+        return 'research-report'
+    if entry['ENTRYTYPE'] == 'phdthesis':
+        return 'thesis'
+    return 'miscellaneous'
+
+
+def get_entry_venue(entry):
+    """Return the full venue name and configured short name for an entry.
+
+    Parameters
+    ----------
+        entry : dict
+          BibTeX entry containing publication fields.
+
+    Returns
+    -------
+        venue : str
+          Full display name without an appended short name.
+        venue_short : str
+          Configured or embedded short name, if available.
+    """
+
+    venue = ''
+    for field in ('journal', 'booktitle', 'publisher', 'eprint', 'school'):
+        if field in entry and entry[field]:
+            venue = entry[field]
+            break
+
+    venue_short, _ = get_publisher_shortname_from_entry(entry)
+    selected_names = [
+        names[0] if isinstance(names, list) else names
+        for names in params['count_publisher']
+    ]
+    selected_names_lower = [name.lower() for name in selected_names]
+    if venue_short == venue and venue_short.lower() not in selected_names_lower:
+        venue_short = ''
+    if venue_short:
+        suffix = ' (%s)' % venue_short
+        if venue.endswith(suffix):
+            venue = venue[:-len(suffix)]
+
+    return venue, venue_short
+
+
+def is_selected_venue(entry):
+    """Return whether an entry belongs to a configured selected venue.
+
+    Parameters
+    ----------
+        entry : dict
+          BibTeX entry to check.
+
+    Returns
+    -------
+        output : bool
+          True when the venue is included in the configured selected list.
+    """
+
+    return get_selected_venue_order(entry) >= 0
+
+
+def get_selected_venue_order(entry):
+    """Return the configured display order for a selected venue.
+
+    Parameters
+    ----------
+        entry : dict
+          BibTeX entry to check.
+
+    Returns
+    -------
+        output : int
+          Zero-based selected venue order, or -1 for other venues.
+    """
+
+    selected_names = []
+    for names in params['count_publisher']:
+        selected_names.append(names[0] if isinstance(names, list) else names)
+    venue_short, _ = get_publisher_shortname_from_entry(entry)
+    selected_names_lower = [name.lower() for name in selected_names]
+    try:
+        return selected_names_lower.index(venue_short.lower())
+    except ValueError:
+        return -1
+
+
+def get_highlighted_author_roles(entry):
+    """Return roles held by configured highlighted authors in an entry.
+
+    Parameters
+    ----------
+        entry : dict
+          BibTeX entry to inspect.
+
+    Returns
+    -------
+        output : str
+          Space-separated role keys in stable order.
+    """
+
+    roles = []
+    names = params['author_names_highlighted']
+    if names and is_author_selected(entry, names, 'first'):
+        roles.append('first')
+    if names and is_author_selected(entry, names, 'corresponding'):
+        roles.append('corresponding')
+    return ' '.join(roles)
+
+
+def get_entry_metadata(entry):
+    """Return machine-readable metadata for a publication entry.
+
+    Parameters
+    ----------
+        entry : dict
+          BibTeX entry to describe.
+
+    Returns
+    -------
+        output : dict
+          Metadata used by HTML data attributes.
+    """
+
+    bib_id = entry['ID'].replace(':', '-').replace('.', '-')
+    venue, venue_short = get_entry_venue(entry)
+    return {
+        'bib_id': bib_id,
+        'entry_type': entry['ENTRYTYPE'],
+        'publication_type': get_publication_type(entry),
+        'year': entry.get('year', ''),
+        'venue': venue,
+        'venue_short': venue_short,
+        'selected_venue': is_selected_venue(entry),
+        'selected_venue_order': get_selected_venue_order(entry),
+        'highlighted_author_roles': get_highlighted_author_roles(entry),
+    }
+
+
 def get_entry_output(entry, out_path=''):
     """Get output html string for a bib entry
 
@@ -926,7 +1117,20 @@ def get_entry_output(entry, out_path=''):
     """
 
     # --- Start list ---
-    out = ['\n<li>\n']
+    metadata = get_entry_metadata(entry)
+    attributes = [
+        'class="publication-item"',
+        'data-bib-id="%s"' % escape_html_attribute(metadata['bib_id']),
+        'data-entry-type="%s"' % escape_html_attribute(metadata['entry_type']),
+        'data-publication-type="%s"' % escape_html_attribute(metadata['publication_type']),
+        'data-year="%s"' % escape_html_attribute(metadata['year']),
+        'data-venue="%s"' % escape_html_attribute(metadata['venue']),
+        'data-venue-short="%s"' % escape_html_attribute(metadata['venue_short']),
+        'data-selected-venue="%s"' % ('true' if metadata['selected_venue'] else 'false'),
+        'data-selected-venue-order="%s"' % metadata['selected_venue_order'],
+        'data-highlighted-author-roles="%s"' % escape_html_attribute(metadata['highlighted_author_roles']),
+    ]
+    out = ['\n<li %s>\n' % ' '.join(attributes)]
 
     # --- author ---
     if 'author' in entry:
@@ -952,27 +1156,28 @@ def get_entry_output(entry, out_path=''):
 
     # -- if book chapter --
     if chapter:
-        out.append('in: %s, %s' % (entry['title'], entry['publisher']))
+        out.append('in: %s, <span class="publication-venue">%s</span>' % (
+            entry['title'], entry['publisher']))
 
     if entry['ENTRYTYPE'] == 'book':
-        out.append(entry['publisher'])
+        out.append('<span class="publication-venue">%s</span>' % entry['publisher'])
 
     out.append('\n')
 
     # --- journal or similar ---
     if 'journal' in entry:
-        out.append('<span class="publisher">%s</span>' % highlight_publisher(entry['journal']))
+        out.append('<span class="publisher publication-venue">%s</span>' % highlight_publisher(entry['journal']))
     elif 'booktitle' in entry:
-        out.append('<span class="publisher">')
+        out.append('<span class="publisher publication-venue">')
         if entry['ENTRYTYPE'] in params['type_conference_paper']:
             out.append(highlight_publisher(entry['booktitle']))
         else:
             out.append(entry['booktitle'])
         out.append('</span>')
     elif 'eprint' in entry:
-        out.append('<span class="publisher">%s</span>' % highlight_publisher(entry['eprint']))
+        out.append('<span class="publisher publication-venue">%s</span>' % highlight_publisher(entry['eprint']))
     elif entry['ENTRYTYPE'] == 'phdthesis':
-        out.append('PhD thesis, %s' % entry['school'])
+        out.append('PhD thesis, <span class="publication-venue">%s</span>' % entry['school'])
     elif entry['ENTRYTYPE'] == 'techreport':
         out.append('Tech. Report, %s' % entry['number'])
 
@@ -1138,27 +1343,21 @@ def get_categories_of_entries(bib_entries):
     thesislist = []
     misclist = []
 
+    category_lists = {
+        'preprint': preprintlist,
+        'book': booklist,
+        'book-chapter': bookchapterlist,
+        'journal': journallist,
+        'conference': conflist,
+        'conference-abstract': abstractlist,
+        'research-report': techreportlist,
+        'thesis': thesislist,
+        'miscellaneous': misclist,
+    }
+
     # Iterate over the entries
     for e in bib_entries:
-
-        if 'eprint' in e:
-            preprintlist.append(e)
-        elif e['ENTRYTYPE'] == "book":
-            booklist.append(e)
-        elif e['ENTRYTYPE'] == "inbook":
-            bookchapterlist.append(e)
-        elif e['ENTRYTYPE'] == "article":
-            journallist.append(e)
-        elif e['ENTRYTYPE'] in params['type_conference_paper']:
-            conflist.append(e)
-        elif e['ENTRYTYPE'] in params['type_conference_abstract']:
-            abstractlist.append(e)
-        elif e['ENTRYTYPE'] == "techreport":
-            techreportlist.append(e)
-        elif e['ENTRYTYPE'] == "phdthesis":
-            thesislist.append(e)
-        else:
-            misclist.append(e)
+        category_lists[get_publication_type(e)].append(e)
 
     # write list of sections, papers
     paperlists = [preprintlist, booklist, bookchapterlist, journallist, conflist, abstractlist, techreportlist,
