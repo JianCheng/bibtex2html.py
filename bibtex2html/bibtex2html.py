@@ -1224,7 +1224,8 @@ def get_entry_output(entry, out_path=''):
     #  url, www, doi, hal_id
     href_link = get_wwwlink_from_entry(entry)
     if href_link != '':
-        out.append('\n')
+        if not params['single_line']:
+            out.append('\n')
         if not params['use_icon']:
             out.append('[')
         out.append('<a target="%s" href="%s">' % (params['target_link'], href_link))
@@ -1247,7 +1248,8 @@ def get_entry_output(entry, out_path=''):
 
     # bibtex
     if show_bibtex:
-        out.append('\n')
+        if not params['single_line']:
+            out.append('\n')
         if params['use_bootstrap_dialog']:
             out.append('''[<a type="button" data-toggle="modal" data-target="#bib-%s">bibtex</a>]&nbsp;''' % bibid)
         else:
@@ -1256,7 +1258,8 @@ def get_entry_output(entry, out_path=''):
 
     #  abstract
     if show_abstract:
-        out.append('\n')
+        if not params['single_line']:
+            out.append('\n')
         if params['use_bootstrap_dialog']:
             out.append('''[<a type="button" data-toggle="modal" data-target="#abs-%s">abstract</a>]&nbsp;''' % bibid)
         else:
@@ -1266,7 +1269,8 @@ def get_entry_output(entry, out_path=''):
     #  download fields
     for i_str in params['bibtex_fields_download']:
         if i_str in entry and entry[i_str] != '':
-            out.append('\n')
+            if not params['single_line']:
+                out.append('\n')
             out.append('''[<a target="%s" href="%s">%s</a>]&nbsp;''' % (
             params['target_link'], entry[i_str] if i_str != 'arxiv' else get_arxivlink_from_entry(entry), i_str))
 
@@ -1275,14 +1279,18 @@ def get_entry_output(entry, out_path=''):
         if params['show_citation'] == 'no':
             pass
         elif params['show_citation'] == 'scholar.js':
-            out.append('\n[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (
+            if not params['single_line']:
+                out.append('\n')
+            out.append('[citations: <span class="scholar" name="%s" with-link="true" target="%s"></span>]&nbsp;' % (
             entry['title'], params['target_link_citation']))
         elif params['show_citation'] == 'bs':
             tt = clean_title(entry['title'])
             if tt in params['dict_title']:
                 citations_url = params['dict_title'][tt]
                 if int(citations_url[0]) >= params['show_citation_lb']:
-                    out.append('\n[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (
+                    if not params['single_line']:
+                        out.append('\n')
+                    out.append('[citations: <a target="%s" href="%s">%s</a>]&nbsp;' % (
                     params['target_link_citation'], citations_url[1], citations_url[0]))
         else:
             raise ValueError('wrong show_citation')
@@ -1290,7 +1298,9 @@ def get_entry_output(entry, out_path=''):
     #  note
     for i_str in params['bibtex_fields_note']:
         if i_str in entry and entry[i_str] != '':
-            out.append('\n(<span class="%s">%s</span>)&nbsp;' % (i_str if i_str != 'note' else 'hlnote0', entry[i_str]))
+            if not params['single_line']:
+                out.append('\n')
+            out.append('(<span class="%s">%s</span>)&nbsp;' % (i_str if i_str != 'note' else 'hlnote0', entry[i_str]))
 
     out.append('\n')
     #  if not params['single_line']:
