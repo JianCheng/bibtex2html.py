@@ -97,6 +97,7 @@ params['author_names_highlighted'] = []
 # used for selection, select entries from bib file
 params['selection_and'] = {}
 params['selection_or'] = {}
+params['selected_paper_ids'] = []
 
 params['outbibfile'] = ''
 
@@ -1051,6 +1052,66 @@ def get_selected_venue_order(entry):
         return -1
 
 
+def get_selected_paper_order(entry):
+    """Return the configured display order for a selected paper.
+
+    Parameters
+    ----------
+        entry : dict
+          BibTeX entry to check.
+
+    Returns
+    -------
+        output : int
+          Zero-based selected paper order, or -1 for other papers.
+    """
+
+    try:
+        return params['selected_paper_ids'].index(entry['ID'])
+    except ValueError:
+        return -1
+
+
+def validate_selected_paper_ids(entries):
+    """Validate selected paper IDs against entries included in the output.
+
+    Parameters
+    ----------
+        entries : list
+          Cleaned BibTeX entries selected for HTML output.
+
+    Returns
+    -------
+        output : None
+          Returns after all configured IDs have been validated.
+
+    Raises
+    ------
+        ValueError
+          Raised when configured IDs are duplicated or missing from the output.
+    """
+
+    selected_ids = params['selected_paper_ids']
+    duplicate_ids = []
+    seen_ids = set()
+    for bib_id in selected_ids:
+        if bib_id in seen_ids and bib_id not in duplicate_ids:
+            duplicate_ids.append(bib_id)
+        seen_ids.add(bib_id)
+    if duplicate_ids:
+        raise ValueError(
+            'Duplicate selected_paper_ids: %s' % ', '.join(duplicate_ids)
+        )
+
+    available_ids = set(entry['ID'] for entry in entries)
+    missing_ids = [bib_id for bib_id in selected_ids if bib_id not in available_ids]
+    if missing_ids:
+        raise ValueError(
+            'Selected paper IDs not found in generated publications: %s'
+            % ', '.join(missing_ids)
+        )
+
+
 def get_highlighted_author_roles(entry):
     """Return roles held by configured highlighted authors in an entry.
 
@@ -1090,6 +1151,7 @@ def get_entry_metadata(entry):
 
     bib_id = entry['ID'].replace(':', '-').replace('.', '-')
     venue, venue_short = get_entry_venue(entry)
+    selected_paper_order = get_selected_paper_order(entry)
     return {
         'bib_id': bib_id,
         'entry_type': entry['ENTRYTYPE'],
@@ -1099,6 +1161,8 @@ def get_entry_metadata(entry):
         'venue_short': venue_short,
         'selected_venue': is_selected_venue(entry),
         'selected_venue_order': get_selected_venue_order(entry),
+        'selected_paper': selected_paper_order >= 0,
+        'selected_paper_order': selected_paper_order,
         'highlighted_author_roles': get_highlighted_author_roles(entry),
     }
 
@@ -1128,6 +1192,8 @@ def get_entry_output(entry, out_path=''):
         'data-venue-short="%s"' % escape_html_attribute(metadata['venue_short']),
         'data-selected-venue="%s"' % ('true' if metadata['selected_venue'] else 'false'),
         'data-selected-venue-order="%s"' % metadata['selected_venue_order'],
+        'data-selected-paper="%s"' % ('true' if metadata['selected_paper'] else 'false'),
+        'data-selected-paper-order="%s"' % metadata['selected_paper_order'],
         'data-highlighted-author-roles="%s"' % escape_html_attribute(metadata['highlighted_author_roles']),
     ]
     out = ['\n<li %s>\n' % ' '.join(attributes)]
@@ -1960,7 +2026,8 @@ def main():
                          'target_link', 'target_link_citation', 'type_conference_paper', 'type_conference_abstract',
                          'encoding',
                          'bibtex_fields_download', 'bibtex_fields_note', 'show_paper_style', 'bootstrap_css',
-                         'count_publisher', 'publisher_short_full_names', 'selection_and', 'selection_or', 'bulleted_list']:
+                         'count_publisher', 'publisher_short_full_names', 'selection_and', 'selection_or',
+                         'selected_paper_ids', 'bulleted_list']:
             if config.has_option(param_str, name_str):
                 params[name_str] = ast.literal_eval(config.get(param_str, name_str))
 
@@ -2092,6 +2159,8 @@ def main():
                     print('e after clean =', e)
 
                 entries_selected.append(e)
+
+    validate_selected_paper_ids(entries_selected)
 
     if params['outbibfile']:
         write_entries_to_bibfile(entries_selected)

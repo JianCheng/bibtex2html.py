@@ -88,6 +88,10 @@ Each generated publication `<li>` has the `publication-item` class and machine-r
 * `data-bib-id`, `data-entry-type`, and `data-publication-type`
 * `data-year`, `data-venue`, and `data-venue-short`
 * `data-selected-venue` and `data-selected-venue-order`
+* `data-selected-paper` and `data-selected-paper-order`
 * `data-highlighted-author-roles`
+
+Set `selected_paper_ids` in the configuration file to an ordered list of exact, case-sensitive BibTeX IDs.
+Generation fails when an ID is duplicated or is not part of the generated publication set.
 
 These attributes are additive and do not change the existing publication text or links.

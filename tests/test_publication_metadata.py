@@ -44,6 +44,7 @@ class PublicationMetadataTest(unittest.TestCase):
         BIBTEX2HTML.params['show_bibtex'] = False
         BIBTEX2HTML.params['type_conference_paper'] = ['inproceedings']
         BIBTEX2HTML.params['type_conference_abstract'] = ['conference']
+        BIBTEX2HTML.params['selected_paper_ids'] = []
 
     def test_journal_metadata_and_roles(self):
         """Return normalized metadata for a selected journal article."""
@@ -193,6 +194,7 @@ class PublicationMetadataTest(unittest.TestCase):
             'title': 'A visible title',
             'year': '2025',
         }
+        BIBTEX2HTML.params['selected_paper_ids'] = ['other', 'special:entry.test']
 
         output = BIBTEX2HTML.get_entry_output(entry)
         opening_tag = output.split('\n', 2)[1]
@@ -201,6 +203,8 @@ class PublicationMetadataTest(unittest.TestCase):
         self.assertIn('data-bib-id="special-entry-test"', opening_tag)
         self.assertIn('data-entry-type="inproceedings"', opening_tag)
         self.assertIn('data-publication-type="conference"', opening_tag)
+        self.assertIn('data-selected-paper="true"', opening_tag)
+        self.assertIn('data-selected-paper-order="1"', opening_tag)
         self.assertIn('data-year="2025"', opening_tag)
         self.assertIn(
             'data-venue="Research &amp; Development &quot;Workshop&quot;"',
@@ -209,6 +213,39 @@ class PublicationMetadataTest(unittest.TestCase):
         self.assertIn('data-highlighted-author-roles="first"', opening_tag)
         self.assertIn('<span class="title">"A visible title"</span>', output)
         self.assertIn('<span class="author">', output)
+
+    def test_selected_paper_metadata_uses_exact_bibtex_id(self):
+        """Match selected papers by the original case-sensitive BibTeX ID."""
+        BIBTEX2HTML.params['selected_paper_ids'] = ['first', 'cheng:TMI2021']
+        entry = {
+            'ID': 'cheng:TMI2021',
+            'ENTRYTYPE': 'article',
+            'title': 'A selected paper',
+        }
+
+        metadata = BIBTEX2HTML.get_entry_metadata(entry)
+
+        self.assertTrue(metadata['selected_paper'])
+        self.assertEqual(metadata['selected_paper_order'], 1)
+
+        entry['ID'] = 'cheng:tmi2021'
+        metadata = BIBTEX2HTML.get_entry_metadata(entry)
+        self.assertFalse(metadata['selected_paper'])
+        self.assertEqual(metadata['selected_paper_order'], -1)
+
+    def test_selected_paper_validation_rejects_duplicates_and_missing_ids(self):
+        """Reject ambiguous or unavailable selected paper configuration."""
+        entries = [{'ID': 'known'}]
+        BIBTEX2HTML.params['selected_paper_ids'] = ['known', 'known']
+        with self.assertRaisesRegex(ValueError, 'Duplicate selected_paper_ids: known'):
+            BIBTEX2HTML.validate_selected_paper_ids(entries)
+
+        BIBTEX2HTML.params['selected_paper_ids'] = ['known', 'missing']
+        with self.assertRaisesRegex(ValueError, 'not found.*missing'):
+            BIBTEX2HTML.validate_selected_paper_ids(entries)
+
+        BIBTEX2HTML.params['selected_paper_ids'] = ['known']
+        self.assertIsNone(BIBTEX2HTML.validate_selected_paper_ids(entries))
 
 
 if __name__ == '__main__':
